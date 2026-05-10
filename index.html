@@ -314,11 +314,26 @@ function updateUsage() {
   document.getElementById('usageCount').textContent = usageCount + ' of 3 used';
 }
 
+function showLimitReached() {
+  const msg = "You've used all 3 free scans for today.\n\nUpgrade to Pro for unlimited resume scoring, cover letters, and job tracking — $19/month.\n\nYour free scans will reset 24 hours after your first scan.";
+  alert(msg);
+}
+
+function syncUsageFromHeaders(res) {
+  const remaining = res.headers.get('X-RateLimit-Remaining');
+  const limit = res.headers.get('X-RateLimit-Limit');
+  if (remaining !== null && limit !== null) {
+    const used = parseInt(limit) - parseInt(remaining);
+    usageCount = Math.max(0, used);
+    updateUsage();
+  }
+}
+
 async function analyze() {
   const jd = document.getElementById('jdInput').value.trim();
   const resume = document.getElementById('resumeInput').value.trim();
   if (!jd || !resume) { alert('Please paste both a job description and your resume.'); return; }
-  if (usageCount >= 3) { alert('You\'ve used all 3 free scans. Upgrade to Pro for unlimited access.'); return; }
+  if (usageCount >= 3) { showLimitReached(); return; }
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('results').style.display = 'none';
@@ -338,12 +353,24 @@ Return this exact JSON:
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
+
+    syncUsageFromHeaders(res);
+
+    if (res.status === 429) {
+      stopLoad('loading');
+      document.getElementById('analyzeBtn').disabled = false;
+      showLimitReached();
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error('Request failed with status ' + res.status);
+    }
+
     const data = await res.json();
     const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
     stopLoad('loading');
-    usageCount++;
-    updateUsage();
     renderResults(parsed);
   } catch(e) {
     stopLoad('loading');
@@ -405,6 +432,7 @@ async function generateCL() {
   const jd = document.getElementById('clJd').value.trim();
   const resume = document.getElementById('clResume').value.trim();
   if (!jd || !resume) { alert('Please paste both a job description and your background.'); return; }
+  if (usageCount >= 3) { showLimitReached(); return; }
 
   document.getElementById('clBtn').disabled = true;
   document.getElementById('clResult').style.display = 'none';
@@ -423,6 +451,20 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
+
+    syncUsageFromHeaders(res);
+
+    if (res.status === 429) {
+      stopLoad('clLoading');
+      document.getElementById('clBtn').disabled = false;
+      showLimitReached();
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error('Request failed with status ' + res.status);
+    }
+
     const data = await res.json();
     const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
     stopLoad('clLoading');
