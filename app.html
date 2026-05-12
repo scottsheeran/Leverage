@@ -131,6 +131,17 @@
   .add-btn:hover { background: var(--bg); }
 
   .tracker-table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .tracker-empty { text-align: center; padding: 32px 16px; color: var(--hint); font-size: 13px; }
+  .notes-btn { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: var(--bg); color: var(--muted); border: 0.5px solid var(--border); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .notes-btn:hover { background: var(--surface); color: var(--text); border-color: var(--border-md); }
+  .notes-btn.has-notes { background: #fffbeb; color: #92400e; border-color: rgba(146, 64, 14, 0.2); }
+  .delete-btn { background: transparent; border: none; color: var(--hint); cursor: pointer; font-size: 14px; padding: 4px 8px; line-height: 1; border-radius: 4px; transition: all 0.15s; }
+  .delete-btn:hover { background: var(--danger-bg); color: var(--danger); }
+  .notes-row { background: var(--bg); }
+  .notes-row td { padding: 12px 14px; border-bottom: 0.5px solid var(--border); }
+  .notes-row textarea { width: 100%; min-height: 60px; font-size: 13px; font-family: inherit; color: var(--text); background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; resize: vertical; line-height: 1.5; }
+  .notes-row textarea:focus { outline: none; border-color: var(--border-md); }
+  .notes-row textarea::placeholder { color: var(--hint); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { font-size: 11px; font-weight: 600; color: var(--hint); text-align: left; padding: 10px 14px; border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); }
   td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
@@ -244,15 +255,10 @@
       </div>
       <div class="tracker-table-wrap">
         <table>
-          <thead><tr><th>Role</th><th>Status</th><th>Fit</th><th>Added</th></tr></thead>
-          <tbody id="jobList">
-            <tr><td>BDR — Oasis Security</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-            <tr><td>ADR — Illumio</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
-            <tr><td>Sr BDR — Hack The Box</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-            <tr><td>BDR — Wiz</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
-            <tr><td>SDR — Ping Identity</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-          </tbody>
+          <thead><tr><th>Role</th><th>Status</th><th>Fit</th><th>Added</th><th>Notes</th><th></th></tr></thead>
+          <tbody id="jobList"></tbody>
         </table>
+        <div class="tracker-empty" id="trackerEmpty">No jobs tracked yet. Add your first one above.</div>
       </div>
     </div>
 
@@ -419,21 +425,161 @@ function renderResults(d) {
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-function addJob() {
-  const title = document.getElementById('jobTitle').value.trim();
-  const status = document.getElementById('jobStatus').value.trim() || 'New';
-  const score = document.getElementById('jobScore').value.trim();
-  if (!title) return;
-  const tbody = document.getElementById('jobList');
-  const n = parseInt(score);
-  const pc = n >= 8 ? 'h' : n >= 6 ? 'm' : 'l';
-  const row = document.createElement('tr');
-  row.innerHTML = `<td>${title}</td><td><span class="s-pill">${status}</span></td><td><span class="score-pill ${pc}">${score ? score+'/10' : '—'}</span></td><td>Today</td>`;
-  tbody.insertBefore(row, tbody.firstChild);
-  document.getElementById('jobTitle').value = '';
-  document.getElementById('jobStatus').value = '';
-  document.getElementById('jobScore').value = '';
+// ============================================
+// JOB TRACKER — state, persistence, rendering
+// ============================================
+const TRACKER_STORAGE_KEY = 'lvrge_tracker_jobs_v1';
+let trackerJobs = loadTrackerJobs();
+
+function loadTrackerJobs() {
+  try {
+    const raw = localStorage.getItem(TRACKER_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
 }
+
+function saveTrackerJobs() {
+  try {
+    localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackerJobs));
+  } catch (e) {
+    console.warn('Tracker storage full or unavailable.');
+  }
+}
+
+function formatJobDate(timestamp) {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now - then;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return diffDays + ' days ago';
+  if (diffDays < 30) return Math.floor(diffDays / 7) + 'w ago';
+  return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, function(m) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+  });
+}
+
+function renderTracker() {
+  const tbody = document.getElementById('jobList');
+  const emptyEl = document.getElementById('trackerEmpty');
+
+  if (trackerJobs.length === 0) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  tbody.innerHTML = '';
+
+  trackerJobs.forEach(function(job) {
+    const n = parseInt(job.score);
+    const pc = n >= 8 ? 'h' : n >= 6 ? 'm' : 'l';
+    const hasNotes = job.notes && job.notes.trim().length > 0;
+    const scoreText = job.score ? escapeHTML(job.score) + '/10' : '—';
+
+    const row = document.createElement('tr');
+    row.dataset.jobId = job.id;
+    row.innerHTML =
+      '<td>' + escapeHTML(job.title) + '</td>' +
+      '<td><span class="s-pill">' + escapeHTML(job.status) + '</span></td>' +
+      '<td><span class="score-pill ' + pc + '">' + scoreText + '</span></td>' +
+      '<td>' + formatJobDate(job.addedAt) + '</td>' +
+      '<td><button class="notes-btn ' + (hasNotes ? 'has-notes' : '') + '" onclick="toggleNotes(\'' + job.id + '\')">' + (hasNotes ? 'Notes ●' : '+ Add') + '</button></td>' +
+      '<td><button class="delete-btn" onclick="deleteJob(\'' + job.id + '\')" aria-label="Delete job">×</button></td>';
+    tbody.appendChild(row);
+  });
+}
+
+function addJob() {
+  const titleEl = document.getElementById('jobTitle');
+  const statusEl = document.getElementById('jobStatus');
+  const scoreEl = document.getElementById('jobScore');
+  const title = titleEl.value.trim();
+  const status = statusEl.value.trim() || 'New';
+  const score = scoreEl.value.trim();
+
+  if (!title) return;
+
+  const job = {
+    id: 'j_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    title: title,
+    status: status,
+    score: score,
+    notes: '',
+    addedAt: Date.now()
+  };
+
+  trackerJobs.unshift(job);
+  saveTrackerJobs();
+  renderTracker();
+
+  titleEl.value = '';
+  statusEl.value = '';
+  scoreEl.value = '';
+  titleEl.focus();
+}
+
+function deleteJob(jobId) {
+  if (!confirm('Delete this job?')) return;
+  trackerJobs = trackerJobs.filter(function(j) { return j.id !== jobId; });
+  saveTrackerJobs();
+  renderTracker();
+}
+
+function toggleNotes(jobId) {
+  const existingRow = document.querySelector('tr.notes-row[data-notes-for="' + jobId + '"]');
+  if (existingRow) {
+    existingRow.remove();
+    return;
+  }
+
+  // Close any other open notes row
+  document.querySelectorAll('tr.notes-row').forEach(function(r) { r.remove(); });
+
+  const targetRow = document.querySelector('tr[data-job-id="' + jobId + '"]');
+  if (!targetRow) return;
+
+  const job = trackerJobs.find(function(j) { return j.id === jobId; });
+  if (!job) return;
+
+  const notesRow = document.createElement('tr');
+  notesRow.className = 'notes-row';
+  notesRow.dataset.notesFor = jobId;
+  notesRow.innerHTML = '<td colspan="6"><textarea placeholder="Notes — interview details, recruiter contacts, follow-up dates, anything that matters." oninput="updateNotes(\'' + jobId + '\', this.value)">' + escapeHTML(job.notes) + '</textarea></td>';
+
+  targetRow.after(notesRow);
+  notesRow.querySelector('textarea').focus();
+}
+
+function updateNotes(jobId, value) {
+  const job = trackerJobs.find(function(j) { return j.id === jobId; });
+  if (!job) return;
+  job.notes = value;
+  saveTrackerJobs();
+
+  // Update the notes button styling without a full re-render (preserves textarea focus)
+  const targetRow = document.querySelector('tr[data-job-id="' + jobId + '"]');
+  if (!targetRow) return;
+  const btn = targetRow.querySelector('.notes-btn');
+  if (!btn) return;
+  const hasNotes = value && value.trim().length > 0;
+  btn.className = 'notes-btn ' + (hasNotes ? 'has-notes' : '');
+  btn.textContent = hasNotes ? 'Notes ●' : '+ Add';
+}
+
+// Initial render
+renderTracker();
 
 async function generateCL() {
   const jd = document.getElementById('clJd').value.trim();
