@@ -153,6 +153,22 @@
   .final-cta h2 { font-size: 44px; font-weight: 600; letter-spacing: -1px; line-height: 1.1; margin-bottom: 18px; }
   .final-cta p { font-size: 17px; color: var(--muted); margin-bottom: 32px; max-width: 520px; margin-left: auto; margin-right: auto; }
 
+  /* Email capture */
+  .email-capture { background: var(--dark); color: #f5f5f0; padding: 64px 0; }
+  .email-capture .section-eyebrow { color: #888; }
+  .email-capture h2 { font-size: 30px; font-weight: 600; letter-spacing: -0.4px; line-height: 1.2; margin-bottom: 12px; text-align: center; color: #f5f5f0; }
+  .email-capture .email-sub { font-size: 15px; color: #999; text-align: center; max-width: 480px; margin: 0 auto 28px; line-height: 1.55; }
+  .email-form { display: flex; gap: 8px; max-width: 460px; margin: 0 auto; }
+  .email-input { flex: 1; font-size: 14px; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius); color: #fff; font-family: inherit; transition: border-color 0.15s; }
+  .email-input::placeholder { color: #777; }
+  .email-input:focus { outline: none; border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.08); }
+  .email-submit { font-size: 14px; padding: 12px 22px; background: #f5f5f0; color: var(--dark); border: none; border-radius: var(--radius); font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; white-space: nowrap; }
+  .email-submit:hover { opacity: 0.88; }
+  .email-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .email-success { text-align: center; padding: 18px 24px; background: rgba(26,127,75,0.15); border: 1px solid rgba(26,127,75,0.4); border-radius: var(--radius); color: #f5f5f0; font-size: 14px; max-width: 460px; margin: 0 auto; display: none; }
+  .email-error { text-align: center; padding: 12px; color: #ff6b6b; font-size: 13px; margin-top: 12px; display: none; }
+  .email-fine { font-size: 11px; color: #666; text-align: center; margin-top: 14px; letter-spacing: 0.02em; }
+
   /* Footer */
   footer { border-top: 0.5px solid var(--border); padding: 40px 0; background: var(--surface); }
   .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
@@ -187,6 +203,9 @@
     .founder p:first-child { font-size: 17px; }
     .final-cta { padding: 60px 0; }
     .final-cta h2 { font-size: 30px; }
+    .email-capture { padding: 48px 0; }
+    .email-capture h2 { font-size: 24px; }
+    .email-form { flex-direction: column; gap: 10px; }
     .nav-links .nav-link { display: none; }
     .footer-inner { flex-direction: column; text-align: center; }
   }
@@ -444,6 +463,21 @@
   </div>
 </section>
 
+<section class="email-capture">
+  <div class="container-narrow">
+    <span class="section-eyebrow">Stay in the loop</span>
+    <h2>Not ready to try it? Get launch updates.</h2>
+    <p class="email-sub">Occasional emails with new features, job search tactics, and product updates. No spam, no fluff. Unsubscribe in one click.</p>
+    <form class="email-form" id="emailForm" action="https://app.kit.com/forms/9435551/subscriptions" method="post">
+      <input type="email" name="email_address" class="email-input" placeholder="you@example.com" required aria-label="Email address">
+      <button type="submit" class="email-submit" id="emailSubmit">Subscribe</button>
+    </form>
+    <div class="email-success" id="emailSuccess">You're in. We'll be in touch with launch updates and job search tips.</div>
+    <div class="email-error" id="emailError">Something went wrong. Please try again.</div>
+    <div class="email-fine">We respect your inbox. Unsubscribe anytime.</div>
+  </div>
+</section>
+
 <section class="final-cta">
   <div class="container-narrow">
     <h2>Take back your leverage.</h2>
@@ -467,6 +501,44 @@
     </div>
   </div>
 </footer>
+
+<script>
+  // Email capture — submit to Kit via fetch, show inline success message
+  document.getElementById('emailForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = document.getElementById('emailSubmit');
+    const successEl = document.getElementById('emailSuccess');
+    const errorEl = document.getElementById('emailError');
+    const email = form.email_address.value.trim();
+
+    if (!email) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Subscribing...';
+    errorEl.style.display = 'none';
+
+    try {
+      const formData = new FormData();
+      formData.append('email_address', email);
+
+      // Kit accepts form-data POSTs from any origin; the response is opaque (no-cors)
+      // but the submission still registers. We optimistically show success.
+      await fetch(form.action, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      });
+
+      form.style.display = 'none';
+      successEl.style.display = 'block';
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Subscribe';
+      errorEl.style.display = 'block';
+    }
+  });
+</script>
 
 </body>
 </html>
