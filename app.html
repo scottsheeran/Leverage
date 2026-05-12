@@ -55,8 +55,10 @@
 
   header { border-bottom: 0.5px solid var(--border); padding: 16px 0; background: var(--surface); }
   .header-inner { display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-size: 17px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); }
-  .logo-sub { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
+  .brand-link { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: inherit; transition: opacity 0.15s; }
+  .brand-link:hover { opacity: 0.7; }
+  .brand-mark { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--text); border: 1.5px solid var(--text); padding: 3px 9px; }
+  .brand-sub { font-weight: 400; color: var(--muted); font-size: 12px; }
   .upgrade-chip { font-size: 12px; padding: 5px 14px; background: var(--text); color: #fff; border-radius: 20px; cursor: pointer; border: none; font-weight: 500; }
   .upgrade-chip:hover { opacity: 0.85; }
 
@@ -150,6 +152,8 @@
     .add-row { grid-template-columns: 1fr 1fr; }
     .score-row { grid-template-columns: 1fr; }
     .tab-btn { padding: 10px 12px; font-size: 12px; }
+    .brand-sub { display: none; }
+    .upgrade-chip { font-size: 11px; padding: 5px 10px; }
   }
 </style>
 </head>
@@ -158,7 +162,10 @@
 <header>
   <div class="container">
     <div class="header-inner">
-      <div><span class="logo">Leverage</span><span class="logo-sub">take back your leverage</span></div>
+      <a href="/" class="brand-link" aria-label="Back to LVRGE home">
+        <span class="brand-mark">LVRGE</span>
+        <span class="brand-sub">take back your leverage</span>
+      </a>
       <button class="upgrade-chip">Upgrade to Pro — $19/mo</button>
     </div>
   </div>
