@@ -296,6 +296,36 @@
 let tone = 'Direct and confident';
 let usageCount = 1;
 
+// ============================================
+// VISITOR ID — stable browser identifier for rate limiting
+// ============================================
+// Generated on first visit and stored in localStorage so the same browser
+// is consistently identified across sessions (even across different IPs).
+// Combined server-side with IP-based rate limiting so users on shared
+// networks (coworking, family, mobile CGNAT) each get a fair quota.
+const VISITOR_ID_KEY = 'lvrge_visitor_id_v1';
+
+function getVisitorId() {
+  try {
+    let id = localStorage.getItem(VISITOR_ID_KEY);
+    if (id && /^v1_[a-zA-Z0-9_-]+$/.test(id)) return id;
+    // Generate a new ID: "v1_" prefix + 24 random alphanumerics
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let random = '';
+    for (let i = 0; i < 24; i++) {
+      random += chars[Math.floor(Math.random() * chars.length)];
+    }
+    id = 'v1_' + random;
+    localStorage.setItem(VISITOR_ID_KEY, id);
+    return id;
+  } catch (e) {
+    // localStorage blocked (private mode, etc.) — return a session-only ID
+    return 'v1_session' + Math.random().toString(36).slice(2, 18);
+  }
+}
+
+const visitorId = getVisitorId();
+
 function switchTab(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
@@ -364,7 +394,12 @@ Return this exact JSON:
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+        visitor_id: visitorId
+      })
     });
 
     syncUsageFromHeaders(res);
@@ -602,7 +637,12 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+        visitor_id: visitorId
+      })
     });
 
     syncUsageFromHeaders(res);
