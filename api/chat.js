@@ -1,30 +1,75 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-// Initialize the rate limiter
-// 3 scans per IP per 24 hours
-const ratelimit = new Ratelimit({
+// Two parallel rate limiters: one keyed on IP, one keyed on browser visitor ID.
+// A request is allowed only if BOTH limits have budget remaining.
+// This protects against:
+//   - Single user clearing localStorage to reset (IP catches them)
+//   - Multiple users sharing an IP / coworking space / CGNAT (visitor ID catches each independently)
+const ipLimiter = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(3, "24 h"),
   analytics: true,
-  prefix: "lvrge_ratelimit",
+  prefix: "lvrge_ratelimit_ip",
 });
+
+const visitorLimiter = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(3, "24 h"),
+  analytics: true,
+  prefix: "lvrge_ratelimit_vid",
+});
+
+// Strict format check for visitor IDs supplied by the client.
+// Expected: "v1_" prefix + alphanumerics/dashes. Reject anything malformed.
+function isValidVisitorId(value) {
+  if (typeof value !== 'string') return false;
+  if (value.length < 4 || value.length > 64) return false;
+  return /^[a-zA-Z0-9_-]+$/.test(value);
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Get the user's IP address from Vercel's headers
+  // Get the user's IP from Vercel's headers
   const ip =
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
     req.headers['x-real-ip'] ||
     'unknown';
 
-  // Check the rate limit
-  const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+  // Pull the visitor ID out of the request body, then sanitize and remove it
+  // before we forward the body to Anthropic.
+  let visitorId = null;
+  const body = req.body && typeof req.body === 'object' ? { ...req.body } : {};
+  if (body.visitor_id && isValidVisitorId(body.visitor_id)) {
+    visitorId = body.visitor_id;
+  }
+  delete body.visitor_id;
 
-  // Surface limit info to the frontend on every response
+  // Check both rate limits. If we have a valid visitor ID, both must pass.
+  // If we don't (old client, missing field, curl), fall back to IP-only.
+  const ipCheck = await ipLimiter.limit(ip);
+
+  let visitorCheck = null;
+  if (visitorId) {
+    visitorCheck = await visitorLimiter.limit(visitorId);
+  }
+
+  // The user's "remaining" is the minimum of the two — whichever is more restrictive.
+  const limit = ipCheck.limit;
+  const remaining = visitorCheck
+    ? Math.min(ipCheck.remaining, visitorCheck.remaining)
+    : ipCheck.remaining;
+  const reset = visitorCheck
+    ? Math.max(ipCheck.reset, visitorCheck.reset)
+    : ipCheck.reset;
+  const success = visitorCheck
+    ? (ipCheck.success && visitorCheck.success)
+    : ipCheck.success;
+
+  // Surface limit info on every response so the frontend can keep its UI in sync
   res.setHeader('X-RateLimit-Limit', limit);
   res.setHeader('X-RateLimit-Remaining', remaining);
   res.setHeader('X-RateLimit-Reset', reset);
@@ -47,7 +92,7 @@ export default async function handler(req, res) {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify(body)
     });
 
     const data = await response.json();
