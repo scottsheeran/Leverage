@@ -126,20 +126,29 @@
   .step p { font-size: 14px; color: var(--muted); line-height: 1.55; }
 
   /* Pricing */
-  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 720px; margin: 0 auto; }
-  .price-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 32px; }
-  .price-card.featured { border: 1.5px solid var(--text); position: relative; }
-  .price-badge { position: absolute; top: -10px; right: 24px; background: var(--text); color: #fff; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 1000px; margin: 0 auto; }
+  .price-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 28px; position: relative; display: flex; flex-direction: column; }
+  .price-card.featured { border: 1.5px solid var(--text); }
+  .price-badge { position: absolute; top: -10px; right: 20px; background: var(--text); color: #fff; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
   .price-tier { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
-  .price-amount { font-size: 40px; font-weight: 600; letter-spacing: -1px; margin-bottom: 4px; }
-  .price-amount .per { font-size: 15px; font-weight: 400; color: var(--muted); }
-  .price-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
-  .price-features { list-style: none; margin-bottom: 24px; }
-  .price-features li { font-size: 14px; padding: 6px 0; padding-left: 22px; position: relative; color: var(--text); }
+  .price-amount { font-size: 36px; font-weight: 600; letter-spacing: -1px; margin-bottom: 4px; }
+  .price-amount .per { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .price-amount .strike { font-size: 18px; font-weight: 400; color: var(--hint); text-decoration: line-through; margin-right: 8px; vertical-align: 4px; }
+  .price-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+  .price-features { list-style: none; margin-bottom: 24px; flex-grow: 1; }
+  .price-features li { font-size: 13px; padding: 5px 0; padding-left: 20px; position: relative; color: var(--text); line-height: 1.5; }
   .price-features li::before { content: "✓"; position: absolute; left: 0; color: #1a7f4b; font-weight: 600; }
   .price-features li.muted { color: var(--muted); }
   .price-features li.muted::before { color: var(--muted); content: "—"; }
-  .price-card .cta-btn { width: 100%; text-align: center; padding: 12px; }
+  .price-card .cta-btn { width: 100%; text-align: center; padding: 11px; font-size: 13px; }
+  .price-card .cta-btn-link { display: block; text-align: center; padding: 11px; font-size: 13px; background: transparent; color: var(--text); border: none; cursor: pointer; font-family: inherit; text-decoration: underline; opacity: 0.7; transition: opacity 0.15s; }
+  .price-card .cta-btn-link:hover { opacity: 1; }
+
+  /* Founding member banner */
+  .founding-banner { max-width: 1000px; margin: 0 auto 28px; background: var(--surface); border: 1px solid var(--text); border-radius: var(--radius); padding: 14px 20px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .founding-badge { font-size: 10px; font-weight: 600; color: #fff; background: var(--text); padding: 3px 9px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+  .founding-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .founding-text strong { font-weight: 600; }
 
   /* Founder note */
   .founder { background: var(--surface); border-radius: var(--radius-lg); padding: 48px; max-width: 680px; margin: 0 auto; border: 0.5px solid var(--border); }
@@ -198,6 +207,8 @@
     .feature-card h3 { font-size: 22px; }
     .steps { grid-template-columns: 1fr; gap: 24px; }
     .pricing-grid { grid-template-columns: 1fr; }
+    .founding-banner { padding: 12px 16px; }
+    .founding-text { font-size: 12px; }
     .founder { padding: 28px; }
     .founder p { font-size: 15px; }
     .founder p:first-child { font-size: 17px; }
@@ -413,6 +424,12 @@
     <span class="section-eyebrow">Pricing</span>
     <h2 class="section-title">Honest pricing. No tricks.</h2>
     <p class="section-subtitle">Try it free. If it works, upgrade. If it doesn't, you've lost nothing.</p>
+
+    <div class="founding-banner">
+      <span class="founding-badge">Founding Members</span>
+      <span class="founding-text">First <strong>50 paid users</strong> lock in $15/mo Pro or $29/mo Unlimited — <strong>forever</strong>. No price hikes, ever.</span>
+    </div>
+
     <div class="pricing-grid">
 
       <div class="price-card">
@@ -425,25 +442,42 @@
           <li>Unlimited job tracking</li>
           <li>No credit card required</li>
           <li class="muted">Priority API response</li>
-          <li class="muted">Early access to new features</li>
+          <li class="muted">Early access to features</li>
         </ul>
         <a href="/app" class="cta-btn cta-btn-outline">Start free</a>
       </div>
 
       <div class="price-card featured">
-        <span class="price-badge">Pro</span>
+        <span class="price-badge">Most Popular</span>
         <div class="price-tier">Pro</div>
-        <div class="price-amount">$19<span class="per">/month</span></div>
-        <div class="price-desc">For an active job search.</div>
+        <div class="price-amount"><span class="strike">$19</span>$15<span class="per">/month</span></div>
+        <div class="price-desc">For an active job search. Founding rate locked forever.</div>
+        <ul class="price-features">
+          <li>30 resume scans per month</li>
+          <li>30 cover letters per month</li>
+          <li>Unlimited job tracking</li>
+          <li>Priority API response</li>
+          <li>Early access to features</li>
+          <li>Founding Member pricing forever</li>
+        </ul>
+        <button class="cta-btn" onclick="document.getElementById('emailForm').scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>document.querySelector('.email-input').focus(),600)">Get Founding access</button>
+        <button class="cta-btn-link" onclick="window.location.href='/app'">Try free first →</button>
+      </div>
+
+      <div class="price-card">
+        <div class="price-tier">Pro Unlimited</div>
+        <div class="price-amount"><span class="strike">$39</span>$29<span class="per">/month</span></div>
+        <div class="price-desc">For an aggressive search. Unlimited everything.</div>
         <ul class="price-features">
           <li>Unlimited resume scans</li>
           <li>Unlimited cover letters</li>
           <li>Unlimited job tracking</li>
-          <li>No credit card required to start</li>
           <li>Priority API response</li>
-          <li>Early access to new features</li>
+          <li>Early access to features</li>
+          <li>Founding Member pricing forever</li>
         </ul>
-        <a href="/app" class="cta-btn">Try free first →</a>
+        <button class="cta-btn cta-btn-outline" onclick="document.getElementById('emailForm').scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>document.querySelector('.email-input').focus(),600)">Get Founding access</button>
+        <button class="cta-btn-link" onclick="window.location.href='/app'">Try free first →</button>
       </div>
 
     </div>
@@ -466,8 +500,8 @@
 <section class="email-capture">
   <div class="container-narrow">
     <span class="section-eyebrow">Stay in the loop</span>
-    <h2>Not ready to try it? Get launch updates.</h2>
-    <p class="email-sub">Occasional emails with new features, job search tactics, and product updates. No spam, no fluff. Unsubscribe in one click.</p>
+    <h2>Lock in Founding Member pricing.</h2>
+    <p class="email-sub">Drop your email and we'll send you a Founding Member invite when paid plans go live — $15 Pro or $29 Unlimited, locked forever. Plus occasional job search tips. No spam.</p>
     <form class="email-form" id="emailForm" action="https://app.kit.com/forms/9435551/subscriptions" method="post">
       <input type="email" name="email_address" class="email-input" placeholder="you@example.com" required aria-label="Email address">
       <button type="submit" class="email-submit" id="emailSubmit">Subscribe</button>
