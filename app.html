@@ -30,6 +30,12 @@
 <meta name="twitter:description" content="AI-powered resume optimization, cover letters, and job tracking for job seekers tired of the ATS black hole.">
 <meta name="twitter:image" content="https://www.leverageapp.co/og_image.png">
 
+<!-- External libraries for file handling and export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -55,12 +61,11 @@
 
   header { border-bottom: 0.5px solid var(--border); padding: 16px 0; background: var(--surface); }
   .header-inner { display: flex; align-items: center; justify-content: space-between; }
-  .brand-link { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: inherit; transition: opacity 0.15s; }
-  .brand-link:hover { opacity: 0.7; }
-  .brand-mark { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--text); border: 1.5px solid var(--text); padding: 3px 9px; }
-  .brand-sub { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .logo { font-size: 17px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); }
+  .logo-sub { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
   .upgrade-chip { font-size: 12px; padding: 5px 14px; background: var(--text); color: #fff; border-radius: 20px; cursor: pointer; border: none; font-weight: 500; }
   .upgrade-chip:hover { opacity: 0.85; }
+  .pro-status { font-size: 11px; padding: 5px 14px; background: var(--success-bg); color: var(--success); border-radius: 20px; font-weight: 500; }
 
   .usage-strip { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 10px 0; }
   .usage-inner { display: flex; align-items: center; gap: 12px; }
@@ -88,9 +93,19 @@
   textarea:focus { outline: none; border-color: var(--border-md); background: var(--surface); }
   textarea::placeholder { color: var(--hint); }
 
+  input[type="file"] { width: 100%; font-size: 13px; padding: 8px 0; }
+  input[type="file"]::file-selector-button { background: var(--bg); color: var(--text); border: 0.5px solid var(--border-md); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 12px; }
+  input[type="file"]::file-selector-button:hover { background: var(--surface); }
+
+  .file-info { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
   .primary-btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 500; border: 0.5px solid var(--border-md); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); margin-bottom: 20px; transition: background 0.15s; }
   .primary-btn:hover { background: var(--bg); }
   .primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .export-row { display: flex; gap: 8px; margin-bottom: 20px; }
+  .export-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 500; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: var(--bg); color: var(--text); transition: background 0.15s; }
+  .export-btn:hover { background: var(--surface); }
 
   .loading { text-align: center; padding: 28px; color: var(--muted); font-size: 13px; display: none; }
   .spinner { display: inline-block; width: 15px; height: 15px; border: 1.5px solid var(--border-md); border-top-color: var(--muted); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
@@ -131,17 +146,6 @@
   .add-btn:hover { background: var(--bg); }
 
   .tracker-table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .tracker-empty { text-align: center; padding: 32px 16px; color: var(--hint); font-size: 13px; }
-  .notes-btn { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: var(--bg); color: var(--muted); border: 0.5px solid var(--border); cursor: pointer; font-family: inherit; transition: all 0.15s; }
-  .notes-btn:hover { background: var(--surface); color: var(--text); border-color: var(--border-md); }
-  .notes-btn.has-notes { background: #fffbeb; color: #92400e; border-color: rgba(146, 64, 14, 0.2); }
-  .delete-btn { background: transparent; border: none; color: var(--hint); cursor: pointer; font-size: 14px; padding: 4px 8px; line-height: 1; border-radius: 4px; transition: all 0.15s; }
-  .delete-btn:hover { background: var(--danger-bg); color: var(--danger); }
-  .notes-row { background: var(--bg); }
-  .notes-row td { padding: 12px 14px; border-bottom: 0.5px solid var(--border); }
-  .notes-row textarea { width: 100%; min-height: 60px; font-size: 13px; font-family: inherit; color: var(--text); background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; resize: vertical; line-height: 1.5; }
-  .notes-row textarea:focus { outline: none; border-color: var(--border-md); }
-  .notes-row textarea::placeholder { color: var(--hint); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { font-size: 11px; font-weight: 600; color: var(--hint); text-align: left; padding: 10px 14px; border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); }
   td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
@@ -158,13 +162,30 @@
 
   .cl-result { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 4px; display: none; }
 
+  /* Pro Modal */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius); padding: 32px; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  .modal h2 { font-size: 24px; margin-bottom: 12px; }
+  .modal p { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .modal-features { list-style: none; margin-bottom: 24px; }
+  .modal-features li { font-size: 14px; padding: 8px 0; color: var(--text); }
+  .modal-features li:before { content: "✓ "; color: var(--success); font-weight: 600; margin-right: 8px; }
+  .modal-btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 600; background: var(--text); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; margin-bottom: 8px; }
+  .modal-btn:hover { opacity: 0.9; }
+  .modal-close { width: 100%; padding: 12px; font-size: 14px; background: transparent; border: 0.5px solid var(--border-md); color: var(--text); border-radius: var(--radius); cursor: pointer; }
+  .modal-close:hover { background: var(--bg); }
+
+  .pro-locked { opacity: 0.5; pointer-events: none; }
+  .pro-badge { display: inline-block; font-size: 10px; background: var(--warning-bg); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
+
   @media (max-width: 600px) {
     .two-col { grid-template-columns: 1fr; }
     .add-row { grid-template-columns: 1fr 1fr; }
     .score-row { grid-template-columns: 1fr; }
     .tab-btn { padding: 10px 12px; font-size: 12px; }
-    .brand-sub { display: none; }
-    .upgrade-chip { font-size: 11px; padding: 5px 10px; }
+    .export-row { flex-direction: column; }
+    .modal { padding: 24px; }
   }
 </style>
 </head>
@@ -173,11 +194,10 @@
 <header>
   <div class="container">
     <div class="header-inner">
-      <a href="/" class="brand-link" aria-label="Back to LVRGE home">
-        <span class="brand-mark">LVRGE</span>
-        <span class="brand-sub">take back your leverage</span>
-      </a>
-      <button class="upgrade-chip">Upgrade to Pro — $19/mo</button>
+      <div><span class="logo">Leverage</span><span class="logo-sub">take back your leverage</span></div>
+      <div id="headerStatus">
+        <button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $19/mo</button>
+      </div>
     </div>
   </div>
 </header>
@@ -187,7 +207,7 @@
     <div class="usage-inner">
       <span class="usage-label">Free scans</span>
       <div class="bar-track"><div class="bar-fill" id="usageBar"></div></div>
-      <span class="usage-count" id="usageCount">1 of 3 used</span>
+      <span class="usage-count" id="usageCount">3 remaining</span>
     </div>
   </div>
 </div>
@@ -213,12 +233,22 @@
         </div>
         <div class="field-card">
           <div class="field-label">Your resume</div>
-          <textarea id="resumeInput" placeholder="Paste your resume text here..."></textarea>
+          <div id="resumeInputContainer">
+            <textarea id="resumeInput" placeholder="Paste your resume text here..."></textarea>
+            <div style="margin-top: 10px; display: none;" id="fileUploadSection">
+              <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" onchange="handleResumeUpload(event)">
+              <div class="file-info" id="fileInfo">Or paste text above</div>
+            </div>
+          </div>
         </div>
       </div>
       <button class="primary-btn" id="analyzeBtn" onclick="analyze()">Analyze and optimize ↗</button>
       <div class="loading" id="loading"><span class="spinner"></span><span id="loadingMsg">Scanning keywords...</span></div>
       <div class="results" id="results">
+        <div class="export-row" id="exportRow" style="display:none;">
+          <button class="export-btn" onclick="exportResultsAsDocx()">📄 Export as DOCX</button>
+          <button class="export-btn" onclick="exportResultsAsPdf()">📋 Export as PDF</button>
+        </div>
         <div class="score-row">
           <div class="metric"><div class="ml">ATS match score</div><div class="mv" id="scoreVal">—</div></div>
           <div class="metric"><div class="ml">Keywords matched</div><div class="mv good" id="matchCount">—</div></div>
@@ -255,10 +285,15 @@
       </div>
       <div class="tracker-table-wrap">
         <table>
-          <thead><tr><th>Role</th><th>Status</th><th>Fit</th><th>Added</th><th>Notes</th><th></th></tr></thead>
-          <tbody id="jobList"></tbody>
+          <thead><tr><th>Role</th><th>Status</th><th>Fit</th><th>Added</th></tr></thead>
+          <tbody id="jobList">
+            <tr><td>BDR — Oasis Security</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+            <tr><td>ADR — Illumio</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
+            <tr><td>Sr BDR — Hack The Box</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+            <tr><td>BDR — Wiz</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
+            <tr><td>SDR — Ping Identity</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+          </tbody>
         </table>
-        <div class="tracker-empty" id="trackerEmpty">No jobs tracked yet. Add your first one above.</div>
       </div>
     </div>
 
@@ -283,6 +318,10 @@
       <button class="primary-btn" id="clBtn" onclick="generateCL()">Generate cover letter ↗</button>
       <div class="loading" id="clLoading"><span class="spinner"></span>Writing your cover letter...</div>
       <div class="cl-result" id="clResult">
+        <div class="export-row" id="clExportRow" style="display:none;">
+          <button class="export-btn" onclick="exportCLAsDocx()">📄 Export as DOCX</button>
+          <button class="export-btn" onclick="exportCLAsPdf()">📋 Export as PDF</button>
+        </div>
         <div class="rw-name">Cover letter</div>
         <div class="rw-text" id="clText"></div>
         <button class="copy-btn" onclick="copyEl('clText',this)">Copy</button>
@@ -292,39 +331,105 @@
   </div>
 </main>
 
+<!-- Pro Upgrade Modal -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="modal">
+    <h2>Upgrade to Pro</h2>
+    <p>Unlock unlimited AI-powered job search tools with unlimited resume scans, file uploads, document exports, and more.</p>
+    <ul class="modal-features">
+      <li>Unlimited resume analysis</li>
+      <li>Upload PDF/DOCX/TXT resumes</li>
+      <li>Export results as DOCX & PDF</li>
+      <li>Unlimited cover letters</li>
+      <li>Advanced job tracking</li>
+    </ul>
+    <button class="modal-btn" onclick="processPurchase()">Upgrade Now — $19/month</button>
+    <button class="modal-close" onclick="closeUpgradeModal()">Close</button>
+  </div>
+</div>
+
 <script>
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
 let tone = 'Direct and confident';
-let usageCount = 1;
+let usageCount = 0;
+let currentResults = null;
+let isPro = false;
+let customerId = null;
 
-// ============================================
-// VISITOR ID — stable browser identifier for rate limiting
-// ============================================
-// Generated on first visit and stored in localStorage so the same browser
-// is consistently identified across sessions (even across different IPs).
-// Combined server-side with IP-based rate limiting so users on shared
-// networks (coworking, family, mobile CGNAT) each get a fair quota.
-const VISITOR_ID_KEY = 'lvrge_visitor_id_v1';
+// Check pro status on load
+async function checkProStatus() {
+  // First check if we have a customerId in localStorage (from successful payment)
+  const savedCustomerId = localStorage.getItem('lvrge_customer_id');
+  const savedEmail = localStorage.getItem('lvrge_customer_email');
 
-function getVisitorId() {
-  try {
-    let id = localStorage.getItem(VISITOR_ID_KEY);
-    if (id && /^v1_[a-zA-Z0-9_-]+$/.test(id)) return id;
-    // Generate a new ID: "v1_" prefix + 24 random alphanumerics
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let random = '';
-    for (let i = 0; i < 24; i++) {
-      random += chars[Math.floor(Math.random() * chars.length)];
+  if (savedCustomerId || savedEmail) {
+    customerId = savedCustomerId;
+    try {
+      // Verify subscription status with backend
+      const response = await fetch('/api/verify-pro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: savedCustomerId,
+          email: savedEmail,
+        }),
+      });
+      const result = await response.json();
+      isPro = result.isPro === true;
+      if (isPro) {
+        console.log('Pro status verified from backend');
+        // Cache Pro status for quick checks
+        localStorage.setItem('lvrge_pro', 'true');
+      } else {
+        console.log('Subscription has expired or is invalid');
+        localStorage.removeItem('lvrge_pro');
+      }
+    } catch (e) {
+      // Backend unavailable, fall back to localStorage
+      console.warn('Could not verify Pro status with backend, using local cache');
+      isPro = localStorage.getItem('lvrge_pro') === 'true';
     }
-    id = 'v1_' + random;
-    localStorage.setItem(VISITOR_ID_KEY, id);
-    return id;
-  } catch (e) {
-    // localStorage blocked (private mode, etc.) — return a session-only ID
-    return 'v1_session' + Math.random().toString(36).slice(2, 18);
+  } else {
+    // No customerId, check if manually set Pro in localStorage (for testing)
+    isPro = localStorage.getItem('lvrge_pro') === 'true';
+  }
+  updateHeaderForProStatus();
+}
+
+function updateHeaderForProStatus() {
+  const headerStatus = document.getElementById('headerStatus');
+  if (isPro) {
+    headerStatus.innerHTML = '<span class="pro-status">Pro Member</span>';
+    // Show file upload for Pro users
+    document.getElementById('fileUploadSection').style.display = 'block';
+  } else {
+    headerStatus.innerHTML = '<button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $19/mo</button>';
+    document.getElementById('fileUploadSection').style.display = 'none';
   }
 }
 
-const visitorId = getVisitorId();
+function showUpgradeModal() {
+  document.getElementById('upgradeModal').classList.add('active');
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgradeModal').classList.remove('active');
+}
+
+function processPurchase() {
+  // Redirect to LemonSqueezy hosted checkout
+  // Replace with your actual LemonSqueezy checkout URL from your dashboard
+  const checkoutUrl = 'https://leverageapp.lemonsqueezy.com/checkout/buy/YOUR_PRODUCT_ID';
+
+  // For production, use your actual LemonSqueezy checkout URL
+  // You can find this in your LemonSqueezy dashboard under Products
+  // It will look like: https://leverageapp.lemonsqueezy.com/checkout/buy/12345
+
+  // Redirect to checkout
+  window.location.href = checkoutUrl;
+}
 
 function switchTab(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -352,17 +457,24 @@ function startLoad(id, msgId) {
 function stopLoad(id) { clearInterval(mt); document.getElementById(id).style.display = 'none'; }
 
 function updateUsage() {
+  if (isPro) {
+    document.querySelector('.usage-strip').style.display = 'none';
+    return;
+  }
   const pct = Math.round((usageCount/3)*100) + '%';
   document.getElementById('usageBar').style.width = pct;
-  document.getElementById('usageCount').textContent = usageCount + ' of 3 used';
+  const remaining = Math.max(0, 3 - usageCount);
+  document.getElementById('usageCount').textContent = remaining + ' remaining';
 }
 
 function showLimitReached() {
   const msg = "You've used all 3 free scans for today.\n\nUpgrade to Pro for unlimited resume scoring, cover letters, and job tracking — $19/month.\n\nYour free scans will reset 24 hours after your first scan.";
   alert(msg);
+  showUpgradeModal();
 }
 
 function syncUsageFromHeaders(res) {
+  if (isPro) return; // Pro users have unlimited
   const remaining = res.headers.get('X-RateLimit-Remaining');
   const limit = res.headers.get('X-RateLimit-Limit');
   if (remaining !== null && limit !== null) {
@@ -376,7 +488,7 @@ async function analyze() {
   const jd = document.getElementById('jdInput').value.trim();
   const resume = document.getElementById('resumeInput').value.trim();
   if (!jd || !resume) { alert('Please paste both a job description and your resume.'); return; }
-  if (usageCount >= 3) { showLimitReached(); return; }
+  if (!isPro && usageCount >= 3) { showLimitReached(); return; }
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('results').style.display = 'none';
@@ -394,12 +506,7 @@ Return this exact JSON:
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }],
-        visitor_id: visitorId
-      })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
 
     syncUsageFromHeaders(res);
@@ -418,6 +525,7 @@ Return this exact JSON:
     const data = await res.json();
     const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    currentResults = parsed;
     stopLoad('loading');
     renderResults(parsed);
   } catch(e) {
@@ -456,171 +564,36 @@ function renderResults(d) {
     rEl.appendChild(c);
   });
 
+  // Show export buttons only for Pro users
+  if (isPro) {
+    document.getElementById('exportRow').style.display = 'flex';
+  }
+
   document.getElementById('results').style.display = 'block';
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-// ============================================
-// JOB TRACKER — state, persistence, rendering
-// ============================================
-const TRACKER_STORAGE_KEY = 'lvrge_tracker_jobs_v1';
-let trackerJobs = loadTrackerJobs();
-
-function loadTrackerJobs() {
-  try {
-    const raw = localStorage.getItem(TRACKER_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveTrackerJobs() {
-  try {
-    localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackerJobs));
-  } catch (e) {
-    console.warn('Tracker storage full or unavailable.');
-  }
-}
-
-function formatJobDate(timestamp) {
-  const now = new Date();
-  const then = new Date(timestamp);
-  const diffMs = now - then;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return diffDays + ' days ago';
-  if (diffDays < 30) return Math.floor(diffDays / 7) + 'w ago';
-  return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function escapeHTML(str) {
-  if (!str) return '';
-  return String(str).replace(/[&<>"']/g, function(m) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-  });
-}
-
-function renderTracker() {
-  const tbody = document.getElementById('jobList');
-  const emptyEl = document.getElementById('trackerEmpty');
-
-  if (trackerJobs.length === 0) {
-    tbody.innerHTML = '';
-    emptyEl.style.display = 'block';
-    return;
-  }
-
-  emptyEl.style.display = 'none';
-  tbody.innerHTML = '';
-
-  trackerJobs.forEach(function(job) {
-    const n = parseInt(job.score);
-    const pc = n >= 8 ? 'h' : n >= 6 ? 'm' : 'l';
-    const hasNotes = job.notes && job.notes.trim().length > 0;
-    const scoreText = job.score ? escapeHTML(job.score) + '/10' : '—';
-
-    const row = document.createElement('tr');
-    row.dataset.jobId = job.id;
-    row.innerHTML =
-      '<td>' + escapeHTML(job.title) + '</td>' +
-      '<td><span class="s-pill">' + escapeHTML(job.status) + '</span></td>' +
-      '<td><span class="score-pill ' + pc + '">' + scoreText + '</span></td>' +
-      '<td>' + formatJobDate(job.addedAt) + '</td>' +
-      '<td><button class="notes-btn ' + (hasNotes ? 'has-notes' : '') + '" onclick="toggleNotes(\'' + job.id + '\')">' + (hasNotes ? 'Notes ●' : '+ Add') + '</button></td>' +
-      '<td><button class="delete-btn" onclick="deleteJob(\'' + job.id + '\')" aria-label="Delete job">×</button></td>';
-    tbody.appendChild(row);
-  });
-}
-
 function addJob() {
-  const titleEl = document.getElementById('jobTitle');
-  const statusEl = document.getElementById('jobStatus');
-  const scoreEl = document.getElementById('jobScore');
-  const title = titleEl.value.trim();
-  const status = statusEl.value.trim() || 'New';
-  const score = scoreEl.value.trim();
-
+  const title = document.getElementById('jobTitle').value.trim();
+  const status = document.getElementById('jobStatus').value.trim() || 'New';
+  const score = document.getElementById('jobScore').value.trim();
   if (!title) return;
-
-  const job = {
-    id: 'j_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-    title: title,
-    status: status,
-    score: score,
-    notes: '',
-    addedAt: Date.now()
-  };
-
-  trackerJobs.unshift(job);
-  saveTrackerJobs();
-  renderTracker();
-
-  titleEl.value = '';
-  statusEl.value = '';
-  scoreEl.value = '';
-  titleEl.focus();
+  const tbody = document.getElementById('jobList');
+  const n = parseInt(score);
+  const pc = n >= 8 ? 'h' : n >= 6 ? 'm' : 'l';
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${title}</td><td><span class="s-pill">${status}</span></td><td><span class="score-pill ${pc}">${score ? score+'/10' : '—'}</span></td><td>Today</td>`;
+  tbody.insertBefore(row, tbody.firstChild);
+  document.getElementById('jobTitle').value = '';
+  document.getElementById('jobStatus').value = '';
+  document.getElementById('jobScore').value = '';
 }
-
-function deleteJob(jobId) {
-  if (!confirm('Delete this job?')) return;
-  trackerJobs = trackerJobs.filter(function(j) { return j.id !== jobId; });
-  saveTrackerJobs();
-  renderTracker();
-}
-
-function toggleNotes(jobId) {
-  const existingRow = document.querySelector('tr.notes-row[data-notes-for="' + jobId + '"]');
-  if (existingRow) {
-    existingRow.remove();
-    return;
-  }
-
-  // Close any other open notes row
-  document.querySelectorAll('tr.notes-row').forEach(function(r) { r.remove(); });
-
-  const targetRow = document.querySelector('tr[data-job-id="' + jobId + '"]');
-  if (!targetRow) return;
-
-  const job = trackerJobs.find(function(j) { return j.id === jobId; });
-  if (!job) return;
-
-  const notesRow = document.createElement('tr');
-  notesRow.className = 'notes-row';
-  notesRow.dataset.notesFor = jobId;
-  notesRow.innerHTML = '<td colspan="6"><textarea placeholder="Notes — interview details, recruiter contacts, follow-up dates, anything that matters." oninput="updateNotes(\'' + jobId + '\', this.value)">' + escapeHTML(job.notes) + '</textarea></td>';
-
-  targetRow.after(notesRow);
-  notesRow.querySelector('textarea').focus();
-}
-
-function updateNotes(jobId, value) {
-  const job = trackerJobs.find(function(j) { return j.id === jobId; });
-  if (!job) return;
-  job.notes = value;
-  saveTrackerJobs();
-
-  // Update the notes button styling without a full re-render (preserves textarea focus)
-  const targetRow = document.querySelector('tr[data-job-id="' + jobId + '"]');
-  if (!targetRow) return;
-  const btn = targetRow.querySelector('.notes-btn');
-  if (!btn) return;
-  const hasNotes = value && value.trim().length > 0;
-  btn.className = 'notes-btn ' + (hasNotes ? 'has-notes' : '');
-  btn.textContent = hasNotes ? 'Notes ●' : '+ Add';
-}
-
-// Initial render
-renderTracker();
 
 async function generateCL() {
   const jd = document.getElementById('clJd').value.trim();
   const resume = document.getElementById('clResume').value.trim();
   if (!jd || !resume) { alert('Please paste both a job description and your background.'); return; }
-  if (usageCount >= 3) { showLimitReached(); return; }
+  if (!isPro && usageCount >= 3) { showLimitReached(); return; }
 
   document.getElementById('clBtn').disabled = true;
   document.getElementById('clResult').style.display = 'none';
@@ -637,12 +610,7 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }],
-        visitor_id: visitorId
-      })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
 
     syncUsageFromHeaders(res);
@@ -662,6 +630,12 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
     const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
     stopLoad('clLoading');
     document.getElementById('clText').textContent = text;
+
+    // Show export buttons only for Pro users
+    if (isPro) {
+      document.getElementById('clExportRow').style.display = 'flex';
+    }
+
     document.getElementById('clResult').style.display = 'block';
     document.getElementById('clBtn').disabled = false;
   } catch(e) {
@@ -678,6 +652,256 @@ function copyEl(id, btn) {
   });
 }
 
+// Export functions
+async function exportResultsAsDocx() {
+  if (!currentResults) return;
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx || docx;
+
+    const sections = [
+      new Paragraph({
+        text: 'ATS Resume Analysis',
+        heading: HeadingLevel.HEADING_1,
+      }),
+      new Paragraph({
+        text: `Score: ${Math.round(currentResults.score)}%`,
+        spacing: { after: 200 },
+      }),
+      new Paragraph({
+        text: 'Matched Keywords',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      new Paragraph({
+        text: currentResults.matched_keywords.join(', '),
+        spacing: { after: 200 },
+      }),
+      new Paragraph({
+        text: 'Missing Keywords',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      new Paragraph({
+        text: currentResults.missing_keywords.join(', '),
+        spacing: { after: 200 },
+      }),
+      new Paragraph({
+        text: 'Gap Flags',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      ...currentResults.gap_flags.map(flag =>
+        new Paragraph({
+          text: flag,
+          spacing: { after: 100 },
+        })
+      ),
+      new Paragraph({
+        text: 'Rewritten Sections',
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200 },
+      }),
+      ...currentResults.rewrites.flatMap(rw => [
+        new Paragraph({
+          text: rw.section,
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 100 },
+        }),
+        new Paragraph({
+          text: rw.rewritten,
+          spacing: { after: 200 },
+        }),
+      ]),
+    ];
+
+    const doc = new Document({ sections: [{ children: sections }] });
+    const blob = await Packer.toBlob(doc);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LVRGE-Resume-Analysis-${new Date().toISOString().split('T')[0]}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch(e) {
+    console.error('Export error:', e);
+    alert('Error exporting to DOCX: ' + e.message);
+  }
+}
+
+function exportResultsAsPdf() {
+  if (!currentResults) return;
+
+  try {
+    const element = document.getElementById('results');
+    const opt = {
+      margin: 10,
+      filename: `LVRGE-Resume-Analysis-${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    html2pdf().set(opt).from(element).save();
+  } catch(e) {
+    console.error('PDF export error:', e);
+    alert('Error exporting to PDF: ' + e.message);
+  }
+}
+
+async function exportCLAsDocx() {
+  const clText = document.getElementById('clText').textContent;
+  if (!clText) return;
+
+  try {
+    const { Document, Packer, Paragraph, HeadingLevel } = window.docx || docx;
+
+    const doc = new Document({
+      sections: [{
+        children: [
+          new Paragraph({
+            text: 'Cover Letter',
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            text: clText,
+            spacing: { after: 200 },
+          }),
+        ],
+      }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LVRGE-Cover-Letter-${new Date().toISOString().split('T')[0]}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch(e) {
+    console.error('Export error:', e);
+    alert('Error exporting to DOCX: ' + e.message);
+  }
+}
+
+function exportCLAsPdf() {
+  const clResult = document.getElementById('clResult');
+  if (!clResult.textContent) return;
+
+  try {
+    const opt = {
+      margin: 10,
+      filename: `LVRGE-Cover-Letter-${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    html2pdf().set(opt).from(clResult).save();
+  } catch(e) {
+    console.error('PDF export error:', e);
+    alert('Error exporting to PDF: ' + e.message);
+  }
+}
+
+// File parsing for Pro users
+async function handleResumeUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const fileName = file.name;
+  const fileExt = fileName.split('.').pop().toLowerCase();
+
+  try {
+    let text = '';
+
+    if (fileExt === 'txt') {
+      text = await file.text();
+    } else if (fileExt === 'pdf') {
+      text = await parsePDF(file);
+    } else if (fileExt === 'docx') {
+      text = await parseDOCX(file);
+    } else {
+      alert('Unsupported file type. Please upload PDF, DOCX, or TXT.');
+      return;
+    }
+
+    if (!text.trim()) {
+      alert('Could not extract text from file. Please paste your resume instead.');
+      return;
+    }
+
+    document.getElementById('resumeInput').value = text;
+    document.getElementById('fileInfo').textContent = `✓ Loaded: ${fileName}`;
+  } catch (e) {
+    console.error('File parsing error:', e);
+    alert('Error parsing file: ' + e.message);
+  }
+}
+
+async function parsePDF(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = '';
+
+    for (let i = 0; i < pdf.numPages; i++) {
+      const page = await pdf.getPage(i + 1);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      text += pageText + '\n';
+    }
+
+    return text;
+  } catch (e) {
+    throw new Error('Failed to parse PDF: ' + e.message);
+  }
+}
+
+async function parseDOCX(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    // Simple DOCX parsing - extract text from XML
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const docContent = await zip.file('word/document.xml').async('string');
+
+    // Basic regex to extract text content
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(docContent, 'text/xml');
+    const textElements = xmlDoc.getElementsByTagName('w:t');
+
+    let text = '';
+    for (let i = 0; i < textElements.length; i++) {
+      text += textElements[i].textContent;
+    }
+
+    return text || 'Could not extract text from DOCX';
+  } catch (e) {
+    // Fallback for DOCX parsing
+    alert('DOCX parsing requires JSZip library. Falling back to manual parsing. Please paste your resume text instead.');
+    throw new Error('DOCX parsing not fully supported yet');
+  }
+}
+
+// Handle return from LemonSqueezy checkout
+function handlePaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const customerId = params.get('customer_id') || params.get('customerid');
+  const email = params.get('email');
+
+  if (customerId) {
+    localStorage.setItem('lvrge_customer_id', customerId);
+    // Clean up URL to avoid refresh loops
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (email) {
+    // Store email for fallback verification
+    localStorage.setItem('lvrge_customer_email', email);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// Initialize
+handlePaymentReturn();
+checkProStatus();
 updateUsage();
 </script>
 </body>
