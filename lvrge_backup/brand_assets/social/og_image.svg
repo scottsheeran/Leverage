@@ -1,0 +1,23 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="1200" height="630" fill="#0a0a0a"/>
+  
+  <!-- LVRGE badge logo - top center -->
+  <rect x="470" y="120" width="260" height="80" fill="none" stroke="#ffffff" stroke-width="3.5"/>
+  <text x="600" y="178" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="44" font-weight="900" letter-spacing="6" fill="#ffffff">LVRGE</text>
+  
+  <!-- Decorative lever lines flanking the main tagline -->
+  <line x1="200" y1="320" x2="350" y2="320" stroke="#444444" stroke-width="1"/>
+  <line x1="850" y1="320" x2="1000" y2="320" stroke="#444444" stroke-width="1"/>
+  
+  <!-- Main hero tagline -->
+  <text x="600" y="335" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="54" font-weight="300" letter-spacing="1" fill="#ffffff">Take back your leverage.</text>
+  
+  <!-- Feature list -->
+  <text x="600" y="395" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="500" letter-spacing="5" fill="#ffffff">RESUME SCORING · COVER LETTERS · JOB TRACKING</text>
+  
+  <!-- Subtitle / value prop -->
+  <text x="600" y="470" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="300" letter-spacing="0.5" fill="#999999">AI-powered tools for job seekers tired of the ATS black hole.</text>
+  
+  <!-- Bottom URL -->
+  <text x="600" y="565" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="500" letter-spacing="3" fill="#888888">LEVERAGEAPP.CO</text>
+</svg>

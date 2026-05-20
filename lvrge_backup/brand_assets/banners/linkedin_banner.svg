@@ -1,0 +1,16 @@
+<svg width="1584" height="396" viewBox="0 0 1584 396" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="1584" height="396" fill="#0a0a0a"/>
+  
+  <!-- Decorative lever lines flanking the tagline -->
+  <line x1="380" y1="198" x2="540" y2="198" stroke="#444444" stroke-width="1"/>
+  <line x1="1044" y1="198" x2="1204" y2="198" stroke="#444444" stroke-width="1"/>
+  
+  <!-- Main tagline - hero element -->
+  <text x="792" y="210" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="44" font-weight="300" letter-spacing="1" fill="#ffffff">Take back your leverage.</text>
+  
+  <!-- Feature list below - bright white now -->
+  <text x="792" y="258" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="500" letter-spacing="4" fill="#ffffff">RESUME SCORING · COVER LETTERS · JOB TRACKING</text>
+  
+  <!-- Bottom right: URL -->
+  <text x="1494" y="360" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="400" letter-spacing="2.5" fill="#888888">LEVERAGEAPP.CO</text>
+</svg>

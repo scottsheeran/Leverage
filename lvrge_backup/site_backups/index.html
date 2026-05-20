@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LVRGE — Take back your leverage</title>
+
+<!-- Favicons -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0a0a0a">
+
+<!-- Open Graph / Facebook / LinkedIn / Slack / iMessage -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.leverageapp.co/">
+<meta property="og:title" content="LVRGE — Take back your leverage">
+<meta property="og:description" content="AI-powered resume optimization, cover letters, and job tracking for job seekers tired of the ATS black hole.">
+<meta property="og:image" content="https://www.leverageapp.co/og_image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://www.leverageapp.co/">
+<meta name="twitter:title" content="LVRGE — Take back your leverage">
+<meta name="twitter:description" content="AI-powered resume optimization, cover letters, and job tracking for job seekers tired of the ATS black hole.">
+<meta name="twitter:image" content="https://www.leverageapp.co/og_image.png">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.14);
+    --text: #1a1a18;
+    --muted: #6b6b67;
+    --hint: #9b9b97;
+    --accent: #1a1a18;
+    --dark: #0a0a0a;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-lg: 16px;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  .container-narrow { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+  /* Nav */
+  nav { position: sticky; top: 0; z-index: 50; background: rgba(250, 250, 249, 0.85); backdrop-filter: blur(12px); border-bottom: 0.5px solid var(--border); padding: 14px 0; }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: baseline; gap: 8px; text-decoration: none; color: inherit; }
+  .brand-mark { font-size: 16px; font-weight: 700; letter-spacing: 2px; color: var(--text); border: 1.5px solid var(--text); padding: 3px 10px; }
+  .brand-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .nav-links { display: flex; align-items: center; gap: 24px; }
+  .nav-link { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+  .nav-link:hover { color: var(--text); }
+  .cta-btn { font-size: 13px; padding: 8px 16px; background: var(--text); color: #fff; border-radius: 20px; text-decoration: none; font-weight: 500; transition: opacity 0.15s; display: inline-block; border: none; cursor: pointer; }
+  .cta-btn:hover { opacity: 0.85; }
+  .cta-btn-lg { font-size: 15px; padding: 12px 24px; }
+  .cta-btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border-md); }
+  .cta-btn-outline:hover { background: var(--surface); opacity: 1; }
+
+  /* Hero */
+  .hero { padding: 80px 0 60px; text-align: center; }
+  .hero-eyebrow { display: inline-block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 12px; border: 1px solid var(--border-md); border-radius: 20px; margin-bottom: 24px; }
+  .hero h1 { font-size: 52px; font-weight: 600; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; color: var(--text); }
+  .hero h1 .accent { font-style: italic; font-weight: 400; }
+  .hero p { font-size: 18px; color: var(--muted); max-width: 600px; margin: 0 auto 32px; line-height: 1.55; }
+  .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* Hero visual */
+  .hero-visual { margin-top: 60px; max-width: 800px; margin-left: auto; margin-right: auto; }
+  .preview-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 40px -20px rgba(0,0,0,0.08), 0 4px 10px -2px rgba(0,0,0,0.04); }
+  .preview-header { display: flex; align-items: center; gap: 8px; padding-bottom: 16px; border-bottom: 0.5px solid var(--border); margin-bottom: 20px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border-md); }
+  .preview-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .preview-metric { background: var(--bg); padding: 16px; border-radius: var(--radius); text-align: center; }
+  .preview-metric-label { font-size: 10px; color: var(--hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .preview-metric-value { font-size: 28px; font-weight: 600; color: var(--text); }
+  .preview-metric-value.good { color: #1a7f4b; }
+  .preview-metric-value.bad { color: #b91c1c; }
+  .preview-keywords { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .kw { font-size: 11px; padding: 3px 10px; border-radius: 20px; }
+  .kw-match { background: #edfaf3; color: #1a7f4b; }
+  .kw-miss { background: #fef2f2; color: #b91c1c; }
+
+  /* Section */
+  section { padding: 80px 0; }
+  .section-dark { background: var(--dark); color: #f5f5f0; }
+  .section-eyebrow { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 14px; text-align: center; }
+  .section-dark .section-eyebrow { color: #888; }
+  .section-title { font-size: 36px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 16px; text-align: center; }
+  .section-subtitle { font-size: 17px; color: var(--muted); text-align: center; max-width: 640px; margin: 0 auto 56px; line-height: 1.55; }
+  .section-dark .section-subtitle { color: #999; }
+
+  /* Problem section */
+  .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .problem-card { padding: 28px; border-left: 2px solid #333; }
+  .problem-icon { font-size: 28px; margin-bottom: 16px; opacity: 0.8; }
+  .problem-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 10px; color: #f5f5f0; }
+  .problem-card p { font-size: 14px; color: #999; line-height: 1.6; }
+
+  /* Features section */
+  .features-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  .feature-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 36px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .feature-card.reverse .feature-text { order: 2; }
+  .feature-tag { display: inline-block; font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+  .feature-card h3 { font-size: 26px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 14px; line-height: 1.2; }
+  .feature-card p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+  .feature-bullets { list-style: none; }
+  .feature-bullets li { font-size: 13px; color: var(--muted); padding: 4px 0; padding-left: 20px; position: relative; }
+  .feature-bullets li::before { content: "→"; position: absolute; left: 0; color: var(--text); }
+  .feature-visual { background: var(--bg); border-radius: var(--radius); padding: 24px; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+
+  /* How it works */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; position: relative; }
+  .step { text-align: center; padding: 0 8px; }
+  .step-num { display: inline-flex; width: 36px; height: 36px; border-radius: 50%; background: var(--text); color: #fff; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; margin-bottom: 18px; }
+  .step h4 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .step p { font-size: 14px; color: var(--muted); line-height: 1.55; }
+
+  /* Pricing */
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 720px; margin: 0 auto; }
+  .price-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 32px; }
+  .price-card.featured { border: 1.5px solid var(--text); position: relative; }
+  .price-badge { position: absolute; top: -10px; right: 24px; background: var(--text); color: #fff; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .price-tier { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+  .price-amount { font-size: 40px; font-weight: 600; letter-spacing: -1px; margin-bottom: 4px; }
+  .price-amount .per { font-size: 15px; font-weight: 400; color: var(--muted); }
+  .price-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .price-features { list-style: none; margin-bottom: 24px; }
+  .price-features li { font-size: 14px; padding: 6px 0; padding-left: 22px; position: relative; color: var(--text); }
+  .price-features li::before { content: "✓"; position: absolute; left: 0; color: #1a7f4b; font-weight: 600; }
+  .price-features li.muted { color: var(--muted); }
+  .price-features li.muted::before { color: var(--muted); content: "—"; }
+  .price-card .cta-btn { width: 100%; text-align: center; padding: 12px; }
+
+  /* Founder note */
+  .founder { background: var(--surface); border-radius: var(--radius-lg); padding: 48px; max-width: 680px; margin: 0 auto; border: 0.5px solid var(--border); }
+  .founder p { font-size: 17px; line-height: 1.6; color: var(--text); margin-bottom: 16px; }
+  .founder p:first-child { font-size: 19px; font-weight: 500; }
+  .founder p:last-child { margin-bottom: 0; }
+  .founder-byline { font-size: 13px; color: var(--muted); margin-top: 24px; padding-top: 20px; border-top: 0.5px solid var(--border); }
+
+  /* Final CTA */
+  .final-cta { text-align: center; padding: 100px 0; }
+  .final-cta h2 { font-size: 44px; font-weight: 600; letter-spacing: -1px; line-height: 1.1; margin-bottom: 18px; }
+  .final-cta p { font-size: 17px; color: var(--muted); margin-bottom: 32px; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+  /* Footer */
+  footer { border-top: 0.5px solid var(--border); padding: 40px 0; background: var(--surface); }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .footer-brand { display: flex; align-items: center; gap: 10px; }
+  .footer-mark { font-size: 13px; font-weight: 700; letter-spacing: 2px; border: 1.5px solid var(--text); padding: 3px 9px; }
+  .footer-text { font-size: 12px; color: var(--muted); }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { font-size: 12px; color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--text); }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    .hero { padding: 50px 0 40px; }
+    .hero h1 { font-size: 36px; letter-spacing: -1px; }
+    .hero p { font-size: 16px; }
+    .hero-visual { margin-top: 40px; }
+    .preview-card { padding: 16px; }
+    .preview-grid { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .preview-metric { padding: 12px 8px; }
+    .preview-metric-value { font-size: 22px; }
+    section { padding: 56px 0; }
+    .section-title { font-size: 28px; }
+    .section-subtitle { font-size: 15px; margin-bottom: 36px; }
+    .problem-grid { grid-template-columns: 1fr; gap: 12px; }
+    .feature-card { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+    .feature-card.reverse .feature-text { order: 0; }
+    .feature-card h3 { font-size: 22px; }
+    .steps { grid-template-columns: 1fr; gap: 24px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .founder { padding: 28px; }
+    .founder p { font-size: 15px; }
+    .founder p:first-child { font-size: 17px; }
+    .final-cta { padding: 60px 0; }
+    .final-cta h2 { font-size: 30px; }
+    .nav-links .nav-link { display: none; }
+    .footer-inner { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-inner">
+      <a href="/" class="brand">
+        <span class="brand-mark">LVRGE</span>
+        <span class="brand-sub">take back your leverage</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="/app" class="cta-btn">Try it free</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <span class="hero-eyebrow">AI-powered job search tools</span>
+    <h1>Take back your <span class="accent">leverage</span>.</h1>
+    <div style="background: #edfaf3; border: 0.5px solid #d1f0e3; border-radius: 20px; padding: 12px 16px; display: inline-block; margin-bottom: 20px; font-size: 13px; color: #1a7f4b; font-weight: 500;">✓ Getting 3 interviews per week from 15–25 applications with this tool</div>
+    <p>The resume is solid. The experience is there. The skills are real. And still — silence. LVRGE helps you beat the ATS, write better cover letters, and stay organized through the most exhausting search of your career.</p>
+    <div class="hero-ctas">
+      <a href="/app" class="cta-btn cta-btn-lg">Try it free →</a>
+      <a href="#how" class="cta-btn cta-btn-lg cta-btn-outline">How it works</a>
+    </div>
+
+    <div class="hero-visual">
+      <div class="preview-card">
+        <div class="preview-header">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-metric">
+            <div class="preview-metric-label">ATS match score</div>
+            <div class="preview-metric-value good">87%</div>
+          </div>
+          <div class="preview-metric">
+            <div class="preview-metric-label">Keywords matched</div>
+            <div class="preview-metric-value good">23</div>
+          </div>
+          <div class="preview-metric">
+            <div class="preview-metric-label">Keywords missing</div>
+            <div class="preview-metric-value bad">4</div>
+          </div>
+        </div>
+        <div class="preview-keywords">
+          <span class="kw kw-match">Salesforce</span>
+          <span class="kw kw-match">CISO outreach</span>
+          <span class="kw kw-match">cold calling</span>
+          <span class="kw kw-match">prospecting</span>
+          <span class="kw kw-match">Outreach.io</span>
+          <span class="kw kw-match">cybersecurity</span>
+          <span class="kw kw-miss">enterprise SaaS</span>
+          <span class="kw kw-miss">MEDDIC</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-dark">
+  <div class="container">
+    <span class="section-eyebrow">The problem</span>
+    <h2 class="section-title">The system isn't built for the candidate.</h2>
+    <p class="section-subtitle">It's built for the recruiter — and even then, it barely works. Three reasons most qualified people never make it past the first filter.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">⊘</div>
+        <h3>The ATS black hole</h3>
+        <p>Applicant tracking systems filter resumes before a human ever sees them. Miss the right keywords and your application disappears — no matter how qualified you are.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">≈</div>
+        <h3>Generic AI cover letters</h3>
+        <p>Hiring managers can spot a ChatGPT cover letter in three seconds. The robotic phrasing, the empty enthusiasm, the same opener everyone else is using. Straight to the trash.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">✕</div>
+        <h3>$500 resume writers</h3>
+        <p>Pay a stranger who doesn't know your industry to rewrite your resume once. Then realize you need a different version for the next job. And the next. And the next.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="container">
+    <span class="section-eyebrow">What's inside</span>
+    <h2 class="section-title">Three tools. One workflow.</h2>
+    <p class="section-subtitle">Stop juggling Jobscan, ChatGPT, and a Google Sheet. Everything you need to apply smarter, in one place.</p>
+
+    <div class="features-grid">
+
+      <div class="feature-card">
+        <div class="feature-text">
+          <span class="feature-tag">Resume Optimizer</span>
+          <h3>Beat the ATS, not the recruiter.</h3>
+          <p>Paste your resume and the job description. Get an instant match score, the keywords you're missing, and rewritten sections that actually sound like you — not like a robot.</p>
+          <ul class="feature-bullets">
+            <li>ATS match score from 0–100</li>
+            <li>Missing keyword identification</li>
+            <li>Gap flags for experience mismatches</li>
+            <li>AI-rewritten resume sections</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div style="text-align: center; width: 100%;">
+            <div style="font-size: 56px; font-weight: 600; color: #1a7f4b; letter-spacing: -2px;">87%</div>
+            <div style="font-size: 11px; color: var(--hint); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px;">ATS match score</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 16px;">
+              <span class="kw kw-match">React</span>
+              <span class="kw kw-match">TypeScript</span>
+              <span class="kw kw-miss">GraphQL</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-card reverse">
+        <div class="feature-text">
+          <span class="feature-tag">Cover Letter Generator</span>
+          <h3>Cover letters that don't sound like ChatGPT.</h3>
+          <p>Pick a tone — direct, warm, formal, or bold. Get a tailored cover letter in seconds. No "I am writing to express my interest." No empty enthusiasm. Just words that work.</p>
+          <ul class="feature-bullets">
+            <li>Four tone options to match the company</li>
+            <li>Tailored to the specific job description</li>
+            <li>Strong hooks, no generic openers</li>
+            <li>Copy-paste ready</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div style="text-align: left; width: 100%; font-size: 12px; color: var(--muted); line-height: 1.7;">
+            <div style="font-size: 10px; color: var(--hint); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;">Cover Letter — Direct</div>
+            <div>I'll skip the part where I tell you I'm excited about your company. You've read 200 of those this week.</div>
+            <div style="margin-top: 8px;">Here's what I'd actually do in the first 30 days as your...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-text">
+          <span class="feature-tag">Job Tracker</span>
+          <h3>Know where you applied. And what you said.</h3>
+          <p>Every application, every status, every fit score — in one place. Stop scrolling through Gmail trying to remember if you already applied to that company. Stop sending duplicate applications.</p>
+          <ul class="feature-bullets">
+            <li>Track role, company, status, and fit</li>
+            <li>Color-coded score pills</li>
+            <li>Quick add from any page</li>
+            <li>Sortable and searchable</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div style="width: 100%; font-size: 11px;">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 0.5fr; gap: 8px; padding: 8px 12px; background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 6px; color: var(--text);">
+              <div>BDR — Wiz</div><div style="color: var(--muted);">Applied</div><div style="color: #1a7f4b; font-weight: 600;">9/10</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 0.5fr; gap: 8px; padding: 8px 12px; background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 6px; color: var(--text);">
+              <div>ADR — Illumio</div><div style="color: var(--muted);">Interview</div><div style="color: #1a7f4b; font-weight: 600;">8/10</div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 0.5fr; gap: 8px; padding: 8px 12px; background: var(--surface); border-radius: var(--radius-sm); color: var(--text);">
+              <div>SDR — Ping</div><div style="color: var(--muted);">Applied</div><div style="color: #92400e; font-weight: 600;">7/10</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="how" style="background: var(--surface);">
+  <div class="container">
+    <span class="section-eyebrow">How it works</span>
+    <h2 class="section-title">Three steps. Sixty seconds.</h2>
+    <p class="section-subtitle">No account required. No credit card. Just paste and go.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Paste the job</h4>
+        <p>Drop the full job description into the optimizer. Any role, any industry, any company.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Paste your resume</h4>
+        <p>Plain text works fine. No formatting required. LVRGE handles the parsing.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Get your edge</h4>
+        <p>ATS score, missing keywords, gap flags, and rewritten sections — in under 30 seconds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="container">
+    <span class="section-eyebrow">Pricing</span>
+    <h2 class="section-title">Honest pricing. No tricks.</h2>
+    <p class="section-subtitle">Try it free. If it works, upgrade. If it doesn't, you've lost nothing.</p>
+    <div class="pricing-grid">
+
+      <div class="price-card">
+        <div class="price-tier">Free</div>
+        <div class="price-amount">$0<span class="per">/forever</span></div>
+        <div class="price-desc">Enough to see if it works for you.</div>
+        <ul class="price-features">
+          <li>3 resume scans per 24 hours</li>
+          <li>3 cover letters per 24 hours</li>
+          <li>Unlimited job tracking</li>
+          <li>No credit card required</li>
+          <li class="muted">Faster response speed</li>
+          <li class="muted">Unlimited usage</li>
+        </ul>
+        <a href="/app" class="cta-btn cta-btn-outline">Start free</a>
+      </div>
+
+      <div class="price-card featured">
+        <span class="price-badge">Pro</span>
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">$19<span class="per">/month</span></div>
+        <div class="price-desc">For an active job search.</div>
+        <ul class="price-features">
+          <li>Unlimited resume scans</li>
+          <li>Unlimited cover letters</li>
+          <li>Unlimited job tracking</li>
+          <li>Faster response speed</li>
+          <li>Early access to new features</li>
+          <li>Cancel anytime, no hassle</li>
+        </ul>
+        <a href="/app" class="cta-btn">Try free first →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section style="background: var(--surface);">
+  <div class="container-narrow">
+    <span class="section-eyebrow">A note from the builder</span>
+    <h2 class="section-title">Built by someone who needed it.</h2>
+    <div class="founder">
+      <p>I built LVRGE after watching how broken the job application process is for qualified candidates. Hiring managers and ATS systems filter out people who deserve to get in front of them — not because they're unqualified, but because the system isn't built for the candidate.</p>
+      <p>I tested it during an active job search: three interviews per week from 15–25 applications. That's the proof point. But the real insight is this — the problem isn't broken resumes or bad candidates. It's a broken system. LVRGE helps you work it the way it's actually designed, not the way it should be.</p>
+      <p>If you've done everything right and still aren't getting interviews, the problem isn't you. Use this to get past the filter.</p>
+      <div class="founder-byline">— Built by someone who understands the frustration, LVRGE</div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container-narrow">
+    <h2>Take back your leverage.</h2>
+    <p>Free to start. No account required. 30 seconds from now you'll know exactly what your resume is missing.</p>
+    <a href="/app" class="cta-btn cta-btn-lg">Try LVRGE free →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-mark">LVRGE</span>
+        <span class="footer-text">© 2026 LVRGE. Take back your leverage.</span>
+      </div>
+      <div class="footer-links">
+        <a href="/app">App</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

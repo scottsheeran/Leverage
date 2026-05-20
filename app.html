@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LVRGE — Take back your leverage</title>
+
+<!-- Favicons -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0a0a0a">
+
+<!-- Open Graph / Facebook / LinkedIn / Slack / iMessage -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.leverageapp.co/">
+<meta property="og:title" content="LVRGE — Take back your leverage">
+<meta property="og:description" content="AI-powered resume optimization, cover letters, and job tracking for job seekers tired of the ATS black hole.">
+<meta property="og:image" content="https://www.leverageapp.co/og_image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://www.leverageapp.co/">
+<meta name="twitter:title" content="LVRGE — Take back your leverage">
+<meta name="twitter:description" content="AI-powered resume optimization, cover letters, and job tracking for job seekers tired of the ATS black hole.">
+<meta name="twitter:image" content="https://www.leverageapp.co/og_image.png">
+
+<!-- External libraries for file handling and export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.14);
+    --text: #1a1a18;
+    --muted: #6b6b67;
+    --hint: #9b9b97;
+    --success: #1a7f4b;
+    --success-bg: #edfaf3;
+    --danger: #b91c1c;
+    --danger-bg: #fef2f2;
+    --warning: #92400e;
+    --warning-bg: #fffbeb;
+    --accent: #1a1a18;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.6; }
+  .container { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+
+  header { border-bottom: 0.5px solid var(--border); padding: 16px 0; background: var(--surface); }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; }
+  .logo-link { display: inline-flex; align-items: center; padding: 6px 12px; border: 1px solid var(--text); border-radius: 16px; text-decoration: none; color: var(--text); margin-right: 8px; transition: background 0.15s; }
+  .logo-link:hover { background: var(--bg); }
+  .logo { font-size: 17px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); }
+  .logo-sub { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
+  .upgrade-chip { font-size: 12px; padding: 5px 14px; background: var(--text); color: #fff; border-radius: 20px; cursor: pointer; border: none; font-weight: 500; }
+  .upgrade-chip:hover { opacity: 0.85; }
+  .pro-status { font-size: 11px; padding: 5px 14px; background: var(--success-bg); color: var(--success); border-radius: 20px; font-weight: 500; }
+
+  .usage-strip { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 10px 0; }
+  .usage-inner { display: flex; align-items: center; gap: 12px; }
+  .usage-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .bar-track { flex: 1; height: 3px; background: var(--border); border-radius: 2px; }
+  .bar-fill { height: 3px; background: var(--success); border-radius: 2px; width: 33%; transition: width 0.4s; }
+  .usage-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  .tabs { border-bottom: 0.5px solid var(--border); background: var(--surface); }
+  .tab-row { display: flex; gap: 0; }
+  .tab-btn { font-size: 13px; padding: 12px 18px; border: none; background: transparent; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; font-weight: 400; transition: color 0.15s; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+  .pro-tag { font-size: 10px; background: var(--warning-bg); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
+  .free-tag { font-size: 10px; background: var(--success-bg); color: var(--success); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
+
+  main { padding: 24px 0 48px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .field-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .field-label { font-size: 11px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  textarea { width: 100%; font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; resize: vertical; line-height: 1.6; min-height: 180px; }
+  textarea:focus { outline: none; border-color: var(--border-md); background: var(--surface); }
+  textarea::placeholder { color: var(--hint); }
+
+  input[type="file"] { width: 100%; font-size: 13px; padding: 8px 0; }
+  input[type="file"]::file-selector-button { background: var(--bg); color: var(--text); border: 0.5px solid var(--border-md); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 12px; }
+  input[type="file"]::file-selector-button:hover { background: var(--surface); }
+
+  .file-info { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  .primary-btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 500; border: 0.5px solid var(--border-md); border-radius: var(--radius); cursor: pointer; background: var(--surface); color: var(--text); margin-bottom: 20px; transition: background 0.15s; }
+  .primary-btn:hover { background: var(--bg); }
+  .primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .export-row { display: flex; gap: 8px; margin-bottom: 20px; }
+  .export-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 500; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: var(--bg); color: var(--text); transition: background 0.15s; }
+  .export-btn:hover { background: var(--surface); }
+
+  .loading { text-align: center; padding: 28px; color: var(--muted); font-size: 13px; display: none; }
+  .spinner { display: inline-block; width: 15px; height: 15px; border: 1.5px solid var(--border-md); border-top-color: var(--muted); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results { display: none; }
+  .score-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .metric .ml { font-size: 11px; color: var(--hint); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric .mv { font-size: 28px; font-weight: 600; color: var(--text); }
+  .metric .mv.good { color: var(--success); }
+  .metric .mv.warn { color: #b45309; }
+  .metric .mv.bad { color: var(--danger); }
+
+  .result-section { margin-bottom: 20px; }
+  .result-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .kw-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kw { font-size: 12px; padding: 3px 10px; border-radius: 20px; }
+  .kw.match { background: var(--success-bg); color: var(--success); }
+  .kw.miss { background: var(--danger-bg); color: var(--danger); }
+
+  .gap-list { display: flex; flex-direction: column; gap: 0; }
+  .gap-item { font-size: 13px; color: var(--muted); padding: 8px 0; border-bottom: 0.5px solid var(--border); line-height: 1.5; }
+  .gap-item:last-child { border-bottom: none; }
+
+  .rw-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+  .rw-name { font-size: 11px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .rw-text { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-wrap; }
+  .copy-btn { font-size: 12px; padding: 4px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: transparent; color: var(--muted); margin-top: 10px; transition: background 0.15s; }
+  .copy-btn:hover { background: var(--bg); }
+
+  .tracker-add { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+  .add-row { display: grid; grid-template-columns: 2fr 1fr 80px auto; gap: 8px; align-items: center; }
+  input[type="text"] { font-size: 13px; padding: 8px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
+  input[type="text"]:focus { outline: none; border-color: var(--border-md); background: var(--surface); }
+  input[type="text"]::placeholder { color: var(--hint); }
+  .add-btn { padding: 8px 14px; font-size: 13px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface); color: var(--text); white-space: nowrap; font-family: inherit; }
+  .add-btn:hover { background: var(--bg); }
+
+  .tracker-table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { font-size: 11px; font-weight: 600; color: var(--hint); text-align: left; padding: 10px 14px; border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); }
+  td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .s-pill { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: var(--bg); color: var(--muted); border: 0.5px solid var(--border); }
+  .score-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .score-pill.h { background: var(--success-bg); color: var(--success); }
+  .score-pill.m { background: var(--warning-bg); color: var(--warning); }
+  .score-pill.l { background: var(--danger-bg); color: var(--danger); }
+
+  .tone-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tone-btn { font-size: 12px; padding: 5px 14px; border: 0.5px solid var(--border-md); border-radius: 20px; cursor: pointer; background: transparent; color: var(--muted); font-family: inherit; transition: all 0.15s; }
+  .tone-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .cl-result { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 4px; display: none; }
+
+  /* Pro Modal */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius); padding: 32px; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  .modal h2 { font-size: 24px; margin-bottom: 12px; }
+  .modal p { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .modal-features { list-style: none; margin-bottom: 24px; }
+  .modal-features li { font-size: 14px; padding: 8px 0; color: var(--text); }
+  .modal-features li:before { content: "✓ "; color: var(--success); font-weight: 600; margin-right: 8px; }
+  .modal-btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 600; background: var(--text); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; margin-bottom: 8px; }
+  .modal-btn:hover { opacity: 0.9; }
+  .modal-close { width: 100%; padding: 12px; font-size: 14px; background: transparent; border: 0.5px solid var(--border-md); color: var(--text); border-radius: var(--radius); cursor: pointer; }
+  .modal-close:hover { background: var(--bg); }
+
+  .pro-locked { opacity: 0.5; pointer-events: none; }
+  .pro-badge { display: inline-block; font-size: 10px; background: var(--warning-bg); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
+
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    .add-row { grid-template-columns: 1fr 1fr; }
+    .score-row { grid-template-columns: 1fr; }
+    .tab-btn { padding: 10px 12px; font-size: 12px; }
+    .export-row { flex-direction: column; }
+    .modal { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div><a href="/" class="logo-link"><span class="logo">LVRGE</span></a><span class="logo-sub">take back your leverage</span></div>
+      <div id="headerStatus">
+        <button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $19/mo</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="usage-strip">
+  <div class="container">
+    <div class="usage-inner">
+      <span class="usage-label">Free scans</span>
+      <div class="bar-track"><div class="bar-fill" id="usageBar"></div></div>
+      <span class="usage-count" id="usageCount">3 remaining</span>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="container">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('optimizer',this)">Resume optimizer <span class="free-tag">free</span></button>
+      <button class="tab-btn" onclick="switchTab('tracker',this)">Job tracker</button>
+      <button class="tab-btn" onclick="switchTab('coverletter',this)">Cover letter <span class="pro-tag">pro</span></button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="container">
+
+    <div id="optimizer" class="section active">
+      <div class="two-col">
+        <div class="field-card">
+          <div class="field-label">Job description</div>
+          <textarea id="jdInput" placeholder="Paste the full job description here..."></textarea>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Your resume</div>
+          <div id="resumeInputContainer">
+            <textarea id="resumeInput" placeholder="Paste your resume text here..."></textarea>
+            <div style="margin-top: 10px; display: none;" id="fileUploadSection">
+              <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" onchange="handleResumeUpload(event)">
+              <div class="file-info" id="fileInfo">Or paste text above</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="primary-btn" id="analyzeBtn" onclick="analyze()">Analyze and optimize ↗</button>
+      <div class="loading" id="loading"><span class="spinner"></span><span id="loadingMsg">Scanning keywords...</span></div>
+      <div class="results" id="results">
+        <div class="export-row" id="exportRow" style="display:none;">
+          <button class="export-btn" onclick="exportResultsAsDocx()">📄 Export as DOCX</button>
+          <button class="export-btn" onclick="exportResultsAsPdf()">📋 Export as PDF</button>
+        </div>
+        <div class="score-row">
+          <div class="metric"><div class="ml">ATS match score</div><div class="mv" id="scoreVal">—</div></div>
+          <div class="metric"><div class="ml">Keywords matched</div><div class="mv good" id="matchCount">—</div></div>
+          <div class="metric"><div class="ml">Keywords missing</div><div class="mv bad" id="missCount">—</div></div>
+        </div>
+        <div class="result-section">
+          <div class="result-label">Matched keywords</div>
+          <div class="kw-wrap" id="matchedKws"></div>
+        </div>
+        <div class="result-section">
+          <div class="result-label">Missing keywords</div>
+          <div class="kw-wrap" id="missingKws"></div>
+        </div>
+        <div class="result-section">
+          <div class="result-label">Gap flags</div>
+          <div class="gap-list" id="gapList"></div>
+        </div>
+        <div class="result-section">
+          <div class="result-label">Rewritten sections</div>
+          <div id="rewriteCards"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tracker" class="section">
+      <div class="tracker-add">
+        <div class="field-label" style="margin-bottom:10px">Add a job</div>
+        <div class="add-row">
+          <input type="text" id="jobTitle" placeholder="Role — Company (e.g. BDR at Wiz)">
+          <input type="text" id="jobStatus" placeholder="Status">
+          <input type="text" id="jobScore" placeholder="Score">
+          <button class="add-btn" onclick="addJob()">Add</button>
+        </div>
+      </div>
+      <div class="tracker-table-wrap">
+        <table>
+          <thead><tr><th>Role</th><th>Status</th><th>Fit</th><th>Added</th></tr></thead>
+          <tbody id="jobList">
+            <tr><td>BDR — Oasis Security</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+            <tr><td>ADR — Illumio</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
+            <tr><td>Sr BDR — Hack The Box</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+            <tr><td>BDR — Wiz</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
+            <tr><td>SDR — Ping Identity</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="coverletter" class="section">
+      <div class="field-card" style="margin-bottom:12px">
+        <div class="field-label">Job description</div>
+        <textarea id="clJd" placeholder="Paste the job description..."></textarea>
+      </div>
+      <div class="field-card" style="margin-bottom:12px">
+        <div class="field-label">Your background</div>
+        <textarea id="clResume" placeholder="Paste your resume or key background points..."></textarea>
+      </div>
+      <div class="field-card" style="margin-bottom:12px">
+        <div class="field-label">Tone</div>
+        <div class="tone-row">
+          <button class="tone-btn active" onclick="setTone(this,'Direct and confident')">Direct</button>
+          <button class="tone-btn" onclick="setTone(this,'Warm and conversational')">Warm</button>
+          <button class="tone-btn" onclick="setTone(this,'Formal and professional')">Formal</button>
+          <button class="tone-btn" onclick="setTone(this,'Bold and entrepreneurial')">Bold</button>
+        </div>
+      </div>
+      <button class="primary-btn" id="clBtn" onclick="generateCL()">Generate cover letter ↗</button>
+      <div class="loading" id="clLoading"><span class="spinner"></span>Writing your cover letter...</div>
+      <div class="cl-result" id="clResult">
+        <div class="export-row" id="clExportRow" style="display:none;">
+          <button class="export-btn" onclick="exportCLAsDocx()">📄 Export as DOCX</button>
+          <button class="export-btn" onclick="exportCLAsPdf()">📋 Export as PDF</button>
+        </div>
+        <div class="rw-name">Cover letter</div>
+        <div class="rw-text" id="clText"></div>
+        <button class="copy-btn" onclick="copyEl('clText',this)">Copy</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Pro Upgrade Modal -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="modal">
+    <h2>Upgrade to Pro</h2>
+    <p>Unlock unlimited AI-powered job search tools with unlimited resume scans, file uploads, document exports, and more.</p>
+    <ul class="modal-features">
+      <li>Unlimited resume analysis</li>
+      <li>Upload PDF/DOCX/TXT resumes</li>
+      <li>Export results as DOCX & PDF</li>
+      <li>Unlimited cover letters</li>
+      <li>Advanced job tracking</li>
+    </ul>
+    <button class="modal-btn" onclick="processPurchase()">Upgrade Now — $19/month</button>
+    <button class="modal-close" onclick="closeUpgradeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+// Set up PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let tone = 'Direct and confident';
+let usageCount = 0;
+let currentResults = null;
+let isPro = false;
+let customerId = null;
+
+// Check pro status on load
+async function checkProStatus() {
+  // First check if we have a customerId in localStorage (from successful payment)
+  const savedCustomerId = localStorage.getItem('lvrge_customer_id');
+  const savedEmail = localStorage.getItem('lvrge_customer_email');
+
+  if (savedCustomerId || savedEmail) {
+    customerId = savedCustomerId;
+    try {
+      // Verify subscription status with backend
+      const response = await fetch('/api/verify-pro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: savedCustomerId,
+          email: savedEmail,
+        }),
+      });
+      const result = await response.json();
+      isPro = result.isPro === true;
+      if (isPro) {
+        console.log('Pro status verified from backend');
+        // Cache Pro status for quick checks
+        localStorage.setItem('lvrge_pro', 'true');
+      } else {
+        console.log('Subscription has expired or is invalid');
+        localStorage.removeItem('lvrge_pro');
+      }
+    } catch (e) {
+      // Backend unavailable, fall back to localStorage
+      console.warn('Could not verify Pro status with backend, using local cache');
+      isPro = localStorage.getItem('lvrge_pro') === 'true';
+    }
+  } else {
+    // No customerId, check if manually set Pro in localStorage (for testing)
+    isPro = localStorage.getItem('lvrge_pro') === 'true';
+  }
+  updateHeaderForProStatus();
+}
+
+function updateHeaderForProStatus() {
+  const headerStatus = document.getElementById('headerStatus');
+  if (isPro) {
+    headerStatus.innerHTML = '<span class="pro-status">Pro Member</span>';
+    // Show file upload for Pro users
+    document.getElementById('fileUploadSection').style.display = 'block';
+  } else {
+    headerStatus.innerHTML = '<button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $19/mo</button>';
+    document.getElementById('fileUploadSection').style.display = 'none';
+  }
+}
+
+function showUpgradeModal() {
+  document.getElementById('upgradeModal').classList.add('active');
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgradeModal').classList.remove('active');
+}
+
+function processPurchase() {
+  // Redirect to LemonSqueezy hosted checkout
+  // Replace with your actual LemonSqueezy checkout URL from your dashboard
+  const checkoutUrl = 'https://leverageapp.lemonsqueezy.com/checkout/buy/YOUR_PRODUCT_ID';
+
+  // For production, use your actual LemonSqueezy checkout URL
+  // You can find this in your LemonSqueezy dashboard under Products
+  // It will look like: https://leverageapp.lemonsqueezy.com/checkout/buy/12345
+
+  // Redirect to checkout
+  window.location.href = checkoutUrl;
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setTone(btn, t) {
+  tone = t;
+  document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+const msgs = ['Scanning keywords...','Comparing your resume...','Calculating ATS score...','Identifying gaps...','Rewriting sections...','Finalizing...'];
+let mi = 0, mt;
+
+function startLoad(id, msgId) {
+  mi = 0;
+  if (msgId) document.getElementById(msgId).textContent = msgs[0];
+  mt = setInterval(() => { mi = Math.min(mi+1, msgs.length-1); if (msgId) document.getElementById(msgId).textContent = msgs[mi]; }, 2200);
+  document.getElementById(id).style.display = 'block';
+}
+
+function stopLoad(id) { clearInterval(mt); document.getElementById(id).style.display = 'none'; }
+
+function updateUsage() {
+  if (isPro) {
+    document.querySelector('.usage-strip').style.display = 'none';
+    return;
+  }
+  const pct = Math.round((usageCount/3)*100) + '%';
+  document.getElementById('usageBar').style.width = pct;
+  const remaining = Math.max(0, 3 - usageCount);
+  document.getElementById('usageCount').textContent = remaining + ' remaining';
+}
+
+function showLimitReached() {
+  const msg = "You've used all 3 free scans for today.\n\nUpgrade to Pro for unlimited resume scoring, cover letters, and job tracking — $19/month.\n\nYour free scans will reset 24 hours after your first scan.";
+  alert(msg);
+  showUpgradeModal();
+}
+
+function syncUsageFromHeaders(res) {
+  if (isPro) return; // Pro users have unlimited
+  const remaining = res.headers.get('X-RateLimit-Remaining');
+  const limit = res.headers.get('X-RateLimit-Limit');
+  if (remaining !== null && limit !== null) {
+    const used = parseInt(limit) - parseInt(remaining);
+    usageCount = Math.max(0, used);
+    updateUsage();
+  }
+}
+
+async function analyze() {
+  const jd = document.getElementById('jdInput').value.trim();
+  const resume = document.getElementById('resumeInput').value.trim();
+  if (!jd || !resume) { alert('Please paste both a job description and your resume.'); return; }
+  if (!isPro && usageCount >= 3) { showLimitReached(); return; }
+
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('results').style.display = 'none';
+  startLoad('loading', 'loadingMsg');
+
+  const prompt = `You are an expert ATS resume optimizer. Analyze the resume against the job description and return ONLY valid JSON with no markdown or explanation.
+
+Job Description: ${jd}
+Resume: ${resume}
+
+Return this exact JSON:
+{"score":<0-100>,"matched_keywords":[<strings>],"missing_keywords":[<strings>],"gap_flags":[<strings>],"rewrites":[{"section":"Summary","rewritten":"<text>"},{"section":"Skills","rewritten":"<text>"},{"section":"Top experience bullets","rewritten":"<text>"}]}`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+
+    syncUsageFromHeaders(res);
+
+    if (res.status === 429) {
+      stopLoad('loading');
+      document.getElementById('analyzeBtn').disabled = false;
+      showLimitReached();
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error('Request failed with status ' + res.status);
+    }
+
+    const data = await res.json();
+    const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    currentResults = parsed;
+    stopLoad('loading');
+    renderResults(parsed);
+  } catch(e) {
+    stopLoad('loading');
+    document.getElementById('analyzeBtn').disabled = false;
+    alert('Something went wrong. Please try again.');
+  }
+}
+
+function renderResults(d) {
+  const score = Math.round(d.score);
+  const sv = document.getElementById('scoreVal');
+  sv.textContent = score + '%';
+  sv.className = 'mv ' + (score >= 80 ? 'good' : score >= 65 ? 'warn' : 'bad');
+  document.getElementById('matchCount').textContent = d.matched_keywords.length;
+  document.getElementById('missCount').textContent = d.missing_keywords.length;
+
+  const mEl = document.getElementById('matchedKws');
+  mEl.innerHTML = '';
+  d.matched_keywords.forEach(k => { const s = document.createElement('span'); s.className = 'kw match'; s.textContent = k; mEl.appendChild(s); });
+
+  const miEl = document.getElementById('missingKws');
+  miEl.innerHTML = '';
+  d.missing_keywords.forEach(k => { const s = document.createElement('span'); s.className = 'kw miss'; s.textContent = k; miEl.appendChild(s); });
+
+  const gEl = document.getElementById('gapList');
+  gEl.innerHTML = '';
+  d.gap_flags.forEach(g => { const div = document.createElement('div'); div.className = 'gap-item'; div.textContent = '⚡ ' + g; gEl.appendChild(div); });
+
+  const rEl = document.getElementById('rewriteCards');
+  rEl.innerHTML = '';
+  d.rewrites.forEach(r => {
+    const c = document.createElement('div');
+    c.className = 'rw-card';
+    c.innerHTML = `<div class="rw-name">${r.section}</div><div class="rw-text">${r.rewritten}</div><button class="copy-btn" onclick="this.previousElementSibling.previousElementSibling && navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})">Copy</button>`;
+    rEl.appendChild(c);
+  });
+
+  // Show export buttons only for Pro users
+  if (isPro) {
+    document.getElementById('exportRow').style.display = 'flex';
+  }
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = false;
+}
+
+function addJob() {
+  const title = document.getElementById('jobTitle').value.trim();
+  const status = document.getElementById('jobStatus').value.trim() || 'New';
+  const score = document.getElementById('jobScore').value.trim();
+  if (!title) return;
+  const tbody = document.getElementById('jobList');
+  const n = parseInt(score);
+  const pc = n >= 8 ? 'h' : n >= 6 ? 'm' : 'l';
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${title}</td><td><span class="s-pill">${status}</span></td><td><span class="score-pill ${pc}">${score ? score+'/10' : '—'}</span></td><td>Today</td>`;
+  tbody.insertBefore(row, tbody.firstChild);
+  document.getElementById('jobTitle').value = '';
+  document.getElementById('jobStatus').value = '';
+  document.getElementById('jobScore').value = '';
+}
+
+async function generateCL() {
+  const jd = document.getElementById('clJd').value.trim();
+  const resume = document.getElementById('clResume').value.trim();
+  if (!jd || !resume) { alert('Please paste both a job description and your background.'); return; }
+  if (!isPro && usageCount >= 3) { showLimitReached(); return; }
+
+  document.getElementById('clBtn').disabled = true;
+  document.getElementById('clResult').style.display = 'none';
+  startLoad('clLoading', null);
+
+  const prompt = `Write a cover letter for this job application.
+Tone: ${tone}
+Job Description: ${jd}
+Candidate Background: ${resume}
+
+Write a concise, compelling cover letter (3-4 short paragraphs). No generic opener. Start with the strongest hook. End with a clear call to action. Return only the cover letter text.`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+
+    syncUsageFromHeaders(res);
+
+    if (res.status === 429) {
+      stopLoad('clLoading');
+      document.getElementById('clBtn').disabled = false;
+      showLimitReached();
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error('Request failed with status ' + res.status);
+    }
+
+    const data = await res.json();
+    const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    stopLoad('clLoading');
+    document.getElementById('clText').textContent = text;
+
+    // Show export buttons only for Pro users
+    if (isPro) {
+      document.getElementById('clExportRow').style.display = 'flex';
+    }
+
+    document.getElementById('clResult').style.display = 'block';
+    document.getElementById('clBtn').disabled = false;
+  } catch(e) {
+    stopLoad('clLoading');
+    document.getElementById('clBtn').disabled = false;
+    alert('Something went wrong. Please try again.');
+  }
+}
+
+function copyEl(id, btn) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+// Export functions
+async function exportResultsAsDocx() {
+  if (!currentResults) return;
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx || docx;
+
+    const sections = [
+      new Paragraph({
+        text: 'ATS Resume Analysis',
+        heading: HeadingLevel.HEADING_1,
+      }),
+      new Paragraph({
+        text: `Score: ${Math.round(currentResults.score)}%`,
+        spacing: { after: 200 },
+      }),
+      new Paragraph({
+        text: 'Matched Keywords',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      new Paragraph({
+        text: currentResults.matched_keywords.join(', '),
+        spacing: { after: 200 },
+      }),
+      new Paragraph({
+        text: 'Missing Keywords',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      new Paragraph({
+        text: currentResults.missing_keywords.join(', '),
+        spacing: { after: 200 },
+      }),
+      new Paragraph({
+        text: 'Gap Flags',
+        heading: HeadingLevel.HEADING_2,
+      }),
+      ...currentResults.gap_flags.map(flag =>
+        new Paragraph({
+          text: flag,
+          spacing: { after: 100 },
+        })
+      ),
+      new Paragraph({
+        text: 'Rewritten Sections',
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200 },
+      }),
+      ...currentResults.rewrites.flatMap(rw => [
+        new Paragraph({
+          text: rw.section,
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 100 },
+        }),
+        new Paragraph({
+          text: rw.rewritten,
+          spacing: { after: 200 },
+        }),
+      ]),
+    ];
+
+    const doc = new Document({ sections: [{ children: sections }] });
+    const blob = await Packer.toBlob(doc);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LVRGE-Resume-Analysis-${new Date().toISOString().split('T')[0]}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch(e) {
+    console.error('Export error:', e);
+    alert('Error exporting to DOCX: ' + e.message);
+  }
+}
+
+function exportResultsAsPdf() {
+  if (!currentResults) return;
+
+  try {
+    const element = document.getElementById('results');
+    const opt = {
+      margin: 10,
+      filename: `LVRGE-Resume-Analysis-${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    html2pdf().set(opt).from(element).save();
+  } catch(e) {
+    console.error('PDF export error:', e);
+    alert('Error exporting to PDF: ' + e.message);
+  }
+}
+
+async function exportCLAsDocx() {
+  const clText = document.getElementById('clText').textContent;
+  if (!clText) return;
+
+  try {
+    const { Document, Packer, Paragraph, HeadingLevel } = window.docx || docx;
+
+    const doc = new Document({
+      sections: [{
+        children: [
+          new Paragraph({
+            text: 'Cover Letter',
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({
+            text: clText,
+            spacing: { after: 200 },
+          }),
+        ],
+      }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LVRGE-Cover-Letter-${new Date().toISOString().split('T')[0]}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch(e) {
+    console.error('Export error:', e);
+    alert('Error exporting to DOCX: ' + e.message);
+  }
+}
+
+function exportCLAsPdf() {
+  const clResult = document.getElementById('clResult');
+  if (!clResult.textContent) return;
+
+  try {
+    const opt = {
+      margin: 10,
+      filename: `LVRGE-Cover-Letter-${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    html2pdf().set(opt).from(clResult).save();
+  } catch(e) {
+    console.error('PDF export error:', e);
+    alert('Error exporting to PDF: ' + e.message);
+  }
+}
+
+// File parsing for Pro users
+async function handleResumeUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const fileName = file.name;
+  const fileExt = fileName.split('.').pop().toLowerCase();
+
+  try {
+    let text = '';
+
+    if (fileExt === 'txt') {
+      text = await file.text();
+    } else if (fileExt === 'pdf') {
+      text = await parsePDF(file);
+    } else if (fileExt === 'docx') {
+      text = await parseDOCX(file);
+    } else {
+      alert('Unsupported file type. Please upload PDF, DOCX, or TXT.');
+      return;
+    }
+
+    if (!text.trim()) {
+      alert('Could not extract text from file. Please paste your resume instead.');
+      return;
+    }
+
+    document.getElementById('resumeInput').value = text;
+    document.getElementById('fileInfo').textContent = `✓ Loaded: ${fileName}`;
+  } catch (e) {
+    console.error('File parsing error:', e);
+    alert('Error parsing file: ' + e.message);
+  }
+}
+
+async function parsePDF(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = '';
+
+    for (let i = 0; i < pdf.numPages; i++) {
+      const page = await pdf.getPage(i + 1);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      text += pageText + '\n';
+    }
+
+    return text;
+  } catch (e) {
+    throw new Error('Failed to parse PDF: ' + e.message);
+  }
+}
+
+async function parseDOCX(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    // Simple DOCX parsing - extract text from XML
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const docContent = await zip.file('word/document.xml').async('string');
+
+    // Basic regex to extract text content
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(docContent, 'text/xml');
+    const textElements = xmlDoc.getElementsByTagName('w:t');
+
+    let text = '';
+    for (let i = 0; i < textElements.length; i++) {
+      text += textElements[i].textContent;
+    }
+
+    return text || 'Could not extract text from DOCX';
+  } catch (e) {
+    // Fallback for DOCX parsing
+    alert('DOCX parsing requires JSZip library. Falling back to manual parsing. Please paste your resume text instead.');
+    throw new Error('DOCX parsing not fully supported yet');
+  }
+}
+
+// Handle return from LemonSqueezy checkout
+function handlePaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const customerId = params.get('customer_id') || params.get('customerid');
+  const email = params.get('email');
+
+  if (customerId) {
+    localStorage.setItem('lvrge_customer_id', customerId);
+    // Clean up URL to avoid refresh loops
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (email) {
+    // Store email for fallback verification
+    localStorage.setItem('lvrge_customer_email', email);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// Initialize
+handlePaymentReturn();
+checkProStatus();
+updateUsage();
+</script>
+</body>
+</html>

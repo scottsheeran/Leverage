@@ -1,0 +1,6 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="300" height="300" fill="#f5f5f0"/>
+  <rect x="55" y="115" width="190" height="60" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <text x="150" y="158" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="30" font-weight="900" letter-spacing="3" fill="#1a1a1a">LVRGE</text>
+  <text x="150" y="205" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="500" letter-spacing="3" fill="#555555">TAKE BACK YOUR LEVERAGE</text>
+</svg>
