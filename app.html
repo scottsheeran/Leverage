@@ -78,9 +78,9 @@
 
   .tabs { border-bottom: 0.5px solid var(--border); background: var(--surface); }
   .tab-row { display: flex; gap: 0; }
-  .tab-btn { font-size: 13px; padding: 12px 18px; border: none; background: transparent; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; font-weight: 400; transition: color 0.15s; }
+  .tab-btn { font-size: 13px; padding: 8px 16px; border: 1.5px solid transparent; background: transparent; color: var(--muted); cursor: pointer; border-radius: 20px; margin: 6px 4px; font-weight: 400; transition: all 0.15s; }
   .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+  .tab-btn.active { color: var(--text); border: 1.5px solid var(--text); background: transparent; font-weight: 500; }
   .pro-tag { font-size: 10px; background: var(--warning-bg); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
   .free-tag { font-size: 10px; background: var(--success-bg); color: var(--success); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
 
@@ -89,7 +89,7 @@
   .section.active { display: block; }
 
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .field-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .field-card { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; }
   .field-label { font-size: 11px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
   textarea { width: 100%; font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; resize: vertical; line-height: 1.6; min-height: 180px; }
   textarea:focus { outline: none; border-color: var(--border-md); background: var(--surface); }
@@ -115,7 +115,7 @@
 
   .results { display: none; }
   .score-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
-  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; text-align: center; border: 1.5px solid var(--text); }
   .metric .ml { font-size: 11px; color: var(--hint); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
   .metric .mv { font-size: 28px; font-weight: 600; color: var(--text); }
   .metric .mv.good { color: var(--success); }
@@ -133,13 +133,13 @@
   .gap-item { font-size: 13px; color: var(--muted); padding: 8px 0; border-bottom: 0.5px solid var(--border); line-height: 1.5; }
   .gap-item:last-child { border-bottom: none; }
 
-  .rw-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+  .rw-card { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
   .rw-name { font-size: 11px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
   .rw-text { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-wrap; }
   .copy-btn { font-size: 12px; padding: 4px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: transparent; color: var(--muted); margin-top: 10px; transition: background 0.15s; }
   .copy-btn:hover { background: var(--bg); }
 
-  .tracker-add { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+  .tracker-add { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
   .add-row { display: grid; grid-template-columns: 2fr 1fr 80px auto; gap: 8px; align-items: center; }
   input[type="text"] { font-size: 13px; padding: 8px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
   input[type="text"]:focus { outline: none; border-color: var(--border-md); background: var(--surface); }
@@ -147,7 +147,7 @@
   .add-btn { padding: 8px 14px; font-size: 13px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface); color: var(--text); white-space: nowrap; font-family: inherit; }
   .add-btn:hover { background: var(--bg); }
 
-  .tracker-table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .tracker-table-wrap { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { font-size: 11px; font-weight: 600; color: var(--hint); text-align: left; padding: 10px 14px; border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); }
   td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
@@ -162,7 +162,7 @@
   .tone-btn { font-size: 12px; padding: 5px 14px; border: 0.5px solid var(--border-md); border-radius: 20px; cursor: pointer; background: transparent; color: var(--muted); font-family: inherit; transition: all 0.15s; }
   .tone-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
 
-  .cl-result { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 4px; display: none; }
+  .cl-result { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; margin-top: 4px; display: none; }
 
   /* Pro Modal */
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
