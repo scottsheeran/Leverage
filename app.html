@@ -61,7 +61,7 @@
 
   header { border-bottom: 0.5px solid var(--border); padding: 16px 0; background: var(--surface); }
   .header-inner { display: flex; align-items: center; justify-content: space-between; }
-  .logo-link { display: inline-flex; align-items: center; padding: 6px 12px; border: 1px solid var(--text); border-radius: 16px; text-decoration: none; color: var(--text); margin-right: 8px; transition: background 0.15s; }
+  .logo-link { display: inline-flex; align-items: center; padding: 3px 10px; border: 1.5px solid var(--text); border-radius: 0; text-decoration: none; color: var(--text); margin-right: 8px; transition: background 0.15s; }
   .logo-link:hover { background: var(--bg); }
   .logo { font-size: 17px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); }
   .logo-sub { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
@@ -78,9 +78,9 @@
 
   .tabs { border-bottom: 0.5px solid var(--border); background: var(--surface); }
   .tab-row { display: flex; gap: 0; }
-  .tab-btn { font-size: 13px; padding: 8px 16px; border: 1.5px solid transparent; background: transparent; color: var(--muted); cursor: pointer; border-radius: 20px; margin: 6px 4px; font-weight: 400; transition: all 0.15s; }
+  .tab-btn { font-size: 13px; padding: 12px 18px; border: none; background: transparent; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; font-weight: 600; transition: color 0.15s; text-transform: capitalize; }
   .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { color: var(--text); border: 1.5px solid var(--text); background: transparent; font-weight: 500; }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--text); font-weight: 700; }
   .pro-tag { font-size: 10px; background: var(--warning-bg); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
   .free-tag { font-size: 10px; background: var(--success-bg); color: var(--success); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
 
@@ -89,8 +89,8 @@
   .section.active { display: block; }
 
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .field-card { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; }
-  .field-label { font-size: 11px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .field-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .field-label { font-size: 11px; font-weight: 700; color: var(--hint); text-transform: capitalize; letter-spacing: 0.04em; margin-bottom: 10px; }
   textarea { width: 100%; font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; resize: vertical; line-height: 1.6; min-height: 180px; }
   textarea:focus { outline: none; border-color: var(--border-md); background: var(--surface); }
   textarea::placeholder { color: var(--hint); }
@@ -115,15 +115,15 @@
 
   .results { display: none; }
   .score-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
-  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; text-align: center; border: 1.5px solid var(--text); }
-  .metric .ml { font-size: 11px; color: var(--hint); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .metric .ml { font-size: 11px; color: var(--hint); margin-bottom: 6px; text-transform: capitalize; letter-spacing: 0.02em; font-weight: 600; }
   .metric .mv { font-size: 28px; font-weight: 600; color: var(--text); }
   .metric .mv.good { color: var(--success); }
   .metric .mv.warn { color: #b45309; }
   .metric .mv.bad { color: var(--danger); }
 
   .result-section { margin-bottom: 20px; }
-  .result-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .result-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: capitalize; letter-spacing: 0.02em; margin-bottom: 10px; }
   .kw-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
   .kw { font-size: 12px; padding: 3px 10px; border-radius: 20px; }
   .kw.match { background: var(--success-bg); color: var(--success); }
@@ -133,13 +133,13 @@
   .gap-item { font-size: 13px; color: var(--muted); padding: 8px 0; border-bottom: 0.5px solid var(--border); line-height: 1.5; }
   .gap-item:last-child { border-bottom: none; }
 
-  .rw-card { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
-  .rw-name { font-size: 11px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .rw-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+  .rw-name { font-size: 11px; font-weight: 700; color: var(--hint); text-transform: capitalize; letter-spacing: 0.04em; margin-bottom: 10px; }
   .rw-text { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-wrap; }
   .copy-btn { font-size: 12px; padding: 4px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: transparent; color: var(--muted); margin-top: 10px; transition: background 0.15s; }
   .copy-btn:hover { background: var(--bg); }
 
-  .tracker-add { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+  .tracker-add { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
   .add-row { display: grid; grid-template-columns: 2fr 1fr 80px auto; gap: 8px; align-items: center; }
   input[type="text"] { font-size: 13px; padding: 8px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
   input[type="text"]:focus { outline: none; border-color: var(--border-md); background: var(--surface); }
@@ -147,7 +147,7 @@
   .add-btn { padding: 8px 14px; font-size: 13px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface); color: var(--text); white-space: nowrap; font-family: inherit; }
   .add-btn:hover { background: var(--bg); }
 
-  .tracker-table-wrap { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); overflow: hidden; }
+  .tracker-table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { font-size: 11px; font-weight: 600; color: var(--hint); text-align: left; padding: 10px 14px; border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); }
   td { padding: 11px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; }
@@ -162,7 +162,7 @@
   .tone-btn { font-size: 12px; padding: 5px 14px; border: 0.5px solid var(--border-md); border-radius: 20px; cursor: pointer; background: transparent; color: var(--muted); font-family: inherit; transition: all 0.15s; }
   .tone-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
 
-  .cl-result { background: var(--surface); border: 1.5px solid var(--text); border-radius: var(--radius); padding: 14px 16px; margin-top: 4px; display: none; }
+  .cl-result { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 4px; display: none; }
 
   /* Pro Modal */
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -217,9 +217,9 @@
 <div class="tabs">
   <div class="container">
     <div class="tab-row">
-      <button class="tab-btn active" onclick="switchTab('optimizer',this)">Resume optimizer <span class="free-tag">free</span></button>
-      <button class="tab-btn" onclick="switchTab('tracker',this)">Job tracker</button>
-      <button class="tab-btn" onclick="switchTab('coverletter',this)">Cover letter <span class="pro-tag">pro</span></button>
+      <button class="tab-btn active" onclick="switchTab('optimizer',this)">Resume Optimizer <span class="free-tag">free</span></button>
+      <button class="tab-btn" onclick="switchTab('tracker',this)">Job Tracker</button>
+      <button class="tab-btn" onclick="switchTab('coverletter',this)">Cover Letter <span class="pro-tag">pro</span></button>
     </div>
   </div>
 </div>
@@ -289,11 +289,11 @@
         <table>
           <thead><tr><th>Role</th><th>Status</th><th>Fit</th><th>Added</th></tr></thead>
           <tbody id="jobList">
-            <tr><td>BDR — Oasis Security</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-            <tr><td>ADR — Illumio</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
-            <tr><td>Sr BDR — Hack The Box</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-            <tr><td>BDR — Wiz</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
-            <tr><td>SDR — Ping Identity</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+            <tr><td>Software Engineer — Stripe</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+            <tr><td>Product Manager — Notion</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
+            <tr><td>Data Analyst — Veritas</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
+            <tr><td>UX Designer — Figma</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
+            <tr><td>Backend Engineer — Anthropic</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
           </tbody>
         </table>
       </div>
