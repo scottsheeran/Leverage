@@ -126,7 +126,7 @@
   .step p { font-size: 14px; color: var(--muted); line-height: 1.55; }
 
   /* Pricing */
-  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 1000px; margin: 0 auto; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 800px; margin: 0 auto; }
   .price-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 28px; position: relative; display: flex; flex-direction: column; }
   .price-card.featured { border: 1.5px solid var(--text); }
   .price-badge { position: absolute; top: -10px; right: 20px; background: var(--text); color: #fff; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -426,8 +426,8 @@
     <p class="section-subtitle">Try it free. If it works, upgrade. If it doesn't, you've lost nothing.</p>
 
     <div class="founding-banner">
-      <span class="founding-badge">Founding Members</span>
-      <span class="founding-text">First <strong>50 paid users</strong> lock in $15/mo Pro or $29/mo Unlimited — <strong>forever</strong>. No price hikes, ever.</span>
+      <span class="founding-badge">Simple Pricing</span>
+      <span class="founding-text">Free tier to get started. <strong>$49/month Pro</strong> for serious job seekers. No surprises.</span>
     </div>
 
     <div class="pricing-grid">
@@ -437,8 +437,7 @@
         <div class="price-amount">$0<span class="per">/forever</span></div>
         <div class="price-desc">Enough to see if it works for you.</div>
         <ul class="price-features">
-          <li>3 resume scans per day</li>
-          <li>3 cover letters per day</li>
+          <li>10 scans per month</li>
           <li>Unlimited job tracking</li>
           <li>No credit card required</li>
           <li class="muted">Priority API response</li>
@@ -450,35 +449,18 @@
       <div class="price-card featured">
         <span class="price-badge">Most Popular</span>
         <div class="price-tier">Pro</div>
-        <div class="price-amount"><span class="strike">$19</span>$15<span class="per">/month</span></div>
-        <div class="price-desc">For an active job search. Founding rate locked forever.</div>
+        <div class="price-amount">$49<span class="per">/month</span></div>
+        <div class="price-desc">For a focused job search.</div>
         <ul class="price-features">
-          <li>30 resume scans per month</li>
-          <li>30 cover letters per month</li>
+          <li>100 scans per month</li>
           <li>Unlimited job tracking</li>
           <li>Priority API response</li>
           <li>Early access to features</li>
-          <li>Founding Member pricing forever</li>
         </ul>
-        <button class="cta-btn" onclick="document.getElementById('emailForm').scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>document.querySelector('.email-input').focus(),600)">Get Founding access</button>
+        <a href="https://lemonSqueezy.com/checkout/buy/YOUR_PRODUCT_ID" class="cta-btn">Upgrade to Pro</a>
         <button class="cta-btn-link" onclick="window.location.href='/app'">Try free first →</button>
       </div>
 
-      <div class="price-card">
-        <div class="price-tier">Pro Unlimited</div>
-        <div class="price-amount"><span class="strike">$39</span>$29<span class="per">/month</span></div>
-        <div class="price-desc">For an aggressive search. Unlimited everything.</div>
-        <ul class="price-features">
-          <li>Unlimited resume scans</li>
-          <li>Unlimited cover letters</li>
-          <li>Unlimited job tracking</li>
-          <li>Priority API response</li>
-          <li>Early access to features</li>
-          <li>Founding Member pricing forever</li>
-        </ul>
-        <button class="cta-btn cta-btn-outline" onclick="document.getElementById('emailForm').scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>document.querySelector('.email-input').focus(),600)">Get Founding access</button>
-        <button class="cta-btn-link" onclick="window.location.href='/app'">Try free first →</button>
-      </div>
 
     </div>
   </div>
@@ -500,8 +482,8 @@
 <section class="email-capture">
   <div class="container-narrow">
     <span class="section-eyebrow">Stay in the loop</span>
-    <h2>Lock in Founding Member pricing.</h2>
-    <p class="email-sub">Drop your email and we'll send you a Founding Member invite when paid plans go live — $15 Pro or $29 Unlimited, locked forever. Plus occasional job search tips. No spam.</p>
+    <h2>Get tips and updates.</h2>
+    <p class="email-sub">Join our community of job seekers using LVRGE to beat the ATS. Occasional job search tips and early access to new features. No spam.</p>
     <form class="email-form" id="emailForm" action="https://app.kit.com/forms/9435551/subscriptions" method="post">
       <input type="email" name="email_address" class="email-input" placeholder="you@example.com" required aria-label="Email address">
       <button type="submit" class="email-submit" id="emailSubmit">Subscribe</button>

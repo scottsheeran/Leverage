@@ -8,14 +8,14 @@ import { Redis } from "@upstash/redis";
 //   - Multiple users sharing an IP / coworking space / CGNAT (visitor ID catches each independently)
 const ipLimiter = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(3, "24 h"),
+  limiter: Ratelimit.slidingWindow(10, "30 d"),
   analytics: true,
   prefix: "lvrge_ratelimit_ip",
 });
 
 const visitorLimiter = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(3, "24 h"),
+  limiter: Ratelimit.slidingWindow(10, "30 d"),
   analytics: true,
   prefix: "lvrge_ratelimit_vid",
 });
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
   if (!success) {
     return res.status(429).json({
       error: 'rate_limit_exceeded',
-      message: "You've used all 3 free scans. Upgrade to Pro for unlimited access.",
+      message: "You've reached your free scan limit for this month. Upgrade to Pro for 100 scans/month.",
       limit,
       remaining: 0,
       reset,
