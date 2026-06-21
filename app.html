@@ -198,7 +198,7 @@
     <div class="header-inner">
       <div><a href="/" class="logo-link"><span class="logo">LVRGE</span></a><span class="logo-sub">take back your leverage</span></div>
       <div id="headerStatus">
-        <button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $19/mo</button>
+        <button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $49/mo</button>
       </div>
     </div>
   </div>
@@ -209,7 +209,7 @@
     <div class="usage-inner">
       <span class="usage-label">Free scans</span>
       <div class="bar-track"><div class="bar-fill" id="usageBar"></div></div>
-      <span class="usage-count" id="usageCount">3 remaining</span>
+      <span class="usage-count" id="usageCount">10 remaining</span>
     </div>
   </div>
 </div>
@@ -337,15 +337,15 @@
 <div class="modal-overlay" id="upgradeModal">
   <div class="modal">
     <h2>Upgrade to Pro</h2>
-    <p>Unlock unlimited AI-powered job search tools with unlimited resume scans, file uploads, document exports, and more.</p>
+    <p>Get 100 scans per month for serious job seekers. Upload PDFs, export results, and access all premium features.</p>
     <ul class="modal-features">
-      <li>Unlimited resume analysis</li>
+      <li>100 scans per month</li>
       <li>Upload PDF/DOCX/TXT resumes</li>
       <li>Export results as DOCX & PDF</li>
-      <li>Unlimited cover letters</li>
-      <li>Advanced job tracking</li>
+      <li>Priority API response</li>
+      <li>Early access to new features</li>
     </ul>
-    <button class="modal-btn" onclick="processPurchase()">Upgrade Now — $19/month</button>
+    <button class="modal-btn" onclick="processPurchase()">Upgrade Now — $49/month</button>
     <button class="modal-close" onclick="closeUpgradeModal()">Close</button>
   </div>
 </div>
@@ -407,7 +407,7 @@ function updateHeaderForProStatus() {
     // Show file upload for Pro users
     document.getElementById('fileUploadSection').style.display = 'block';
   } else {
-    headerStatus.innerHTML = '<button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $19/mo</button>';
+    headerStatus.innerHTML = '<button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $49/mo</button>';
     document.getElementById('fileUploadSection').style.display = 'none';
   }
 }
@@ -463,14 +463,14 @@ function updateUsage() {
     document.querySelector('.usage-strip').style.display = 'none';
     return;
   }
-  const pct = Math.round((usageCount/3)*100) + '%';
+  const pct = Math.round((usageCount/10)*100) + '%';
   document.getElementById('usageBar').style.width = pct;
-  const remaining = Math.max(0, 3 - usageCount);
+  const remaining = Math.max(0, 10 - usageCount);
   document.getElementById('usageCount').textContent = remaining + ' remaining';
 }
 
 function showLimitReached() {
-  const msg = "You've used all 3 free scans for today.\n\nUpgrade to Pro for unlimited resume scoring, cover letters, and job tracking — $19/month.\n\nYour free scans will reset 24 hours after your first scan.";
+  const msg = "You've reached your free scan limit for this month.\n\nUpgrade to Pro for 100 scans per month — just $49/month.\n\nYour free scans reset on the first of each month.";
   alert(msg);
   showUpgradeModal();
 }
@@ -490,7 +490,7 @@ async function analyze() {
   const jd = document.getElementById('jdInput').value.trim();
   const resume = document.getElementById('resumeInput').value.trim();
   if (!jd || !resume) { alert('Please paste both a job description and your resume.'); return; }
-  if (!isPro && usageCount >= 3) { showLimitReached(); return; }
+  if (!isPro && usageCount >= 10) { showLimitReached(); return; }
 
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('results').style.display = 'none';
@@ -595,7 +595,7 @@ async function generateCL() {
   const jd = document.getElementById('clJd').value.trim();
   const resume = document.getElementById('clResume').value.trim();
   if (!jd || !resume) { alert('Please paste both a job description and your background.'); return; }
-  if (!isPro && usageCount >= 3) { showLimitReached(); return; }
+  if (!isPro && usageCount >= 10) { showLimitReached(); return; }
 
   document.getElementById('clBtn').disabled = true;
   document.getElementById('clResult').style.display = 'none';
