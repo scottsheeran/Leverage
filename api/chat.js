@@ -1,23 +1,37 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-// Two parallel rate limiters: one keyed on IP, one keyed on browser visitor ID.
-// A request is allowed only if BOTH limits have budget remaining.
-// This protects against:
+const redis = Redis.fromEnv();
+
+// Free tier: 10 scans / 30 days. Pro tier: 100 scans / 30 days (per pricing
+// page). Two parallel limiters per tier: one keyed on IP, one keyed on
+// browser visitor ID. A request is allowed only if BOTH limits (for the
+// caller's tier) have budget remaining. This protects against:
 //   - Single user clearing localStorage to reset (IP catches them)
 //   - Multiple users sharing an IP / coworking space / CGNAT (visitor ID catches each independently)
-const ipLimiter = new Ratelimit({
-  redis: Redis.fromEnv(),
+const ipLimiterFree = new Ratelimit({
+  redis,
   limiter: Ratelimit.slidingWindow(10, "30 d"),
   analytics: true,
   prefix: "lvrge_ratelimit_ip",
 });
-
-const visitorLimiter = new Ratelimit({
-  redis: Redis.fromEnv(),
+const visitorLimiterFree = new Ratelimit({
+  redis,
   limiter: Ratelimit.slidingWindow(10, "30 d"),
   analytics: true,
   prefix: "lvrge_ratelimit_vid",
+});
+const ipLimiterPro = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(100, "30 d"),
+  analytics: true,
+  prefix: "lvrge_ratelimit_pro_ip",
+});
+const visitorLimiterPro = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(100, "30 d"),
+  analytics: true,
+  prefix: "lvrge_ratelimit_pro_vid",
 });
 
 // Strict format check for visitor IDs supplied by the client.
@@ -28,6 +42,31 @@ function isValidVisitorId(value) {
   return /^[a-zA-Z0-9_-]+$/.test(value);
 }
 
+function isValidCustomerId(value) {
+  if (typeof value !== 'string') return false;
+  return value.length > 0 && value.length <= 128;
+}
+
+function isValidEmail(value) {
+  if (typeof value !== 'string') return false;
+  return value.length > 0 && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+// Mirrors the check in api/verify-pro.js — a request only gets the Pro
+// rate-limit tier if it has an active subscription in Redis, not just
+// because the client *claims* isPro (which is trivially spoofable).
+async function checkIsPro(customerId, email) {
+  if (!customerId && !email) return false;
+  try {
+    const key = customerId ? `lvrge:pro:${customerId}` : `lvrge:email:${email}`;
+    const subscription = await redis.get(key);
+    return Boolean(subscription);
+  } catch (error) {
+    console.error('Pro status check failed:', error);
+    return false;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -36,7 +75,7 @@ export default async function handler(req, res) {
   // Testing/admin bypass: if the caller sends the correct secret header AND
   // that secret is configured in this deployment's env vars, skip rate
   // limiting entirely. Lets the site owner test without burning through (or
-  // waiting out) the same 10-scans-per-30-days limit real users face.
+  // waiting out) the same limits real users face.
   // Set TEST_BYPASS_KEY in Vercel env vars to enable; leave it unset to
   // disable the bypass entirely.
   const testBypassKey = process.env.TEST_BYPASS_KEY;
@@ -49,16 +88,30 @@ export default async function handler(req, res) {
     req.headers['x-real-ip'] ||
     'unknown';
 
-  // Pull the visitor ID out of the request body, then sanitize and remove it
-  // before we forward the body to Anthropic.
+  // Pull the visitor ID and pro-identity fields out of the request body,
+  // then sanitize and remove them before we forward the body to Anthropic.
   let visitorId = null;
+  let customerId = null;
+  let customerEmail = null;
   const body = req.body && typeof req.body === 'object' ? { ...req.body } : {};
   if (body.visitor_id && isValidVisitorId(body.visitor_id)) {
     visitorId = body.visitor_id;
   }
+  if (isValidCustomerId(body.customer_id)) {
+    customerId = body.customer_id;
+  }
+  if (isValidEmail(body.customer_email)) {
+    customerEmail = body.customer_email;
+  }
   delete body.visitor_id;
+  delete body.customer_id;
+  delete body.customer_email;
 
   if (!bypassRateLimit) {
+    const isPro = await checkIsPro(customerId, customerEmail);
+    const ipLimiter = isPro ? ipLimiterPro : ipLimiterFree;
+    const visitorLimiter = isPro ? visitorLimiterPro : visitorLimiterFree;
+
     // Check both rate limits. If we have a valid visitor ID, both must pass.
     // If we don't (old client, missing field, curl), fall back to IP-only.
     const ipCheck = await ipLimiter.limit(ip);
@@ -88,7 +141,9 @@ export default async function handler(req, res) {
     if (!success) {
       return res.status(429).json({
         error: 'rate_limit_exceeded',
-        message: "You've reached your free scan limit for this month. Upgrade to Pro for 100 scans/month.",
+        message: isPro
+          ? "You've reached your Pro scan limit for this month (100/mo)."
+          : "You've reached your free scan limit for this month. Upgrade to Pro for 100 scans/month.",
         limit,
         remaining: 0,
         reset,

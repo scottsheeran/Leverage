@@ -372,6 +372,17 @@ function chatHeaders() {
   return headers;
 }
 
+// Attach the caller's verified-pro identity (if any) so the backend can
+// apply the correct rate limit tier (100/mo Pro vs 10/mo Free) instead of
+// treating every request as free tier.
+function withProIdentity(payload) {
+  const id = localStorage.getItem('lvrge_customer_id');
+  const email = localStorage.getItem('lvrge_customer_email');
+  if (id) payload.customer_id = id;
+  if (email) payload.customer_email = email;
+  return payload;
+}
+
 // Check pro status on load
 async function checkProStatus() {
   // First check if we have a customerId in localStorage (from successful payment)
@@ -513,7 +524,7 @@ Return this exact JSON:
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: chatHeaders(),
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify(withProIdentity({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }))
     });
 
     syncUsageFromHeaders(res);
@@ -617,7 +628,7 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: chatHeaders(),
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify(withProIdentity({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }))
     });
 
     syncUsageFromHeaders(res);
