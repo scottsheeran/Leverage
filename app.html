@@ -524,7 +524,7 @@ Return this exact JSON:
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: chatHeaders(),
-      body: JSON.stringify(withProIdentity({ model: 'claude-sonnet-5', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }))
+      body: JSON.stringify(withProIdentity({ model: 'claude-sonnet-5', max_tokens: 4096, thinking: { type: 'disabled' }, messages: [{ role: 'user', content: prompt }] }))
     });
 
     syncUsageFromHeaders(res);
@@ -628,7 +628,7 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: chatHeaders(),
-      body: JSON.stringify(withProIdentity({ model: 'claude-sonnet-5', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }))
+      body: JSON.stringify(withProIdentity({ model: 'claude-sonnet-5', max_tokens: 4096, thinking: { type: 'disabled' }, messages: [{ role: 'user', content: prompt }] }))
     });
 
     syncUsageFromHeaders(res);
