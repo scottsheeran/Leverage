@@ -33,6 +33,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Testing/admin bypass: if the caller sends the correct secret header AND
+  // that secret is configured in this deployment's env vars, skip rate
+  // limiting entirely. Lets the site owner test without burning through (or
+  // waiting out) the same 10-scans-per-30-days limit real users face.
+  // Set TEST_BYPASS_KEY in Vercel env vars to enable; leave it unset to
+  // disable the bypass entirely.
+  const testBypassKey = process.env.TEST_BYPASS_KEY;
+  const providedKey = req.headers['x-lvrge-test-key'];
+  const bypassRateLimit = Boolean(testBypassKey) && providedKey === testBypassKey;
+
   // Get the user's IP from Vercel's headers
   const ip =
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -48,40 +58,48 @@ export default async function handler(req, res) {
   }
   delete body.visitor_id;
 
-  // Check both rate limits. If we have a valid visitor ID, both must pass.
-  // If we don't (old client, missing field, curl), fall back to IP-only.
-  const ipCheck = await ipLimiter.limit(ip);
+  if (!bypassRateLimit) {
+    // Check both rate limits. If we have a valid visitor ID, both must pass.
+    // If we don't (old client, missing field, curl), fall back to IP-only.
+    const ipCheck = await ipLimiter.limit(ip);
 
-  let visitorCheck = null;
-  if (visitorId) {
-    visitorCheck = await visitorLimiter.limit(visitorId);
-  }
+    let visitorCheck = null;
+    if (visitorId) {
+      visitorCheck = await visitorLimiter.limit(visitorId);
+    }
 
-  // The user's "remaining" is the minimum of the two — whichever is more restrictive.
-  const limit = ipCheck.limit;
-  const remaining = visitorCheck
-    ? Math.min(ipCheck.remaining, visitorCheck.remaining)
-    : ipCheck.remaining;
-  const reset = visitorCheck
-    ? Math.max(ipCheck.reset, visitorCheck.reset)
-    : ipCheck.reset;
-  const success = visitorCheck
-    ? (ipCheck.success && visitorCheck.success)
-    : ipCheck.success;
+    // The user's "remaining" is the minimum of the two — whichever is more restrictive.
+    const limit = ipCheck.limit;
+    const remaining = visitorCheck
+      ? Math.min(ipCheck.remaining, visitorCheck.remaining)
+      : ipCheck.remaining;
+    const reset = visitorCheck
+      ? Math.max(ipCheck.reset, visitorCheck.reset)
+      : ipCheck.reset;
+    const success = visitorCheck
+      ? (ipCheck.success && visitorCheck.success)
+      : ipCheck.success;
 
-  // Surface limit info on every response so the frontend can keep its UI in sync
-  res.setHeader('X-RateLimit-Limit', limit);
-  res.setHeader('X-RateLimit-Remaining', remaining);
-  res.setHeader('X-RateLimit-Reset', reset);
+    // Surface limit info on every response so the frontend can keep its UI in sync
+    res.setHeader('X-RateLimit-Limit', limit);
+    res.setHeader('X-RateLimit-Remaining', remaining);
+    res.setHeader('X-RateLimit-Reset', reset);
 
-  if (!success) {
-    return res.status(429).json({
-      error: 'rate_limit_exceeded',
-      message: "You've reached your free scan limit for this month. Upgrade to Pro for 100 scans/month.",
-      limit,
-      remaining: 0,
-      reset,
-    });
+    if (!success) {
+      return res.status(429).json({
+        error: 'rate_limit_exceeded',
+        message: "You've reached your free scan limit for this month. Upgrade to Pro for 100 scans/month.",
+        limit,
+        remaining: 0,
+        reset,
+      });
+    }
+  } else {
+    // Bypassed — report a large remaining count so the frontend usage bar
+    // doesn't show a misleading "0 remaining" from a stale sync.
+    res.setHeader('X-RateLimit-Limit', 999999);
+    res.setHeader('X-RateLimit-Remaining', 999999);
+    res.setHeader('X-RateLimit-Reset', 0);
   }
 
   try {

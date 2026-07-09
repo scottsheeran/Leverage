@@ -360,6 +360,18 @@ let currentResults = null;
 let isPro = false;
 let customerId = null;
 
+// Testing helper: if you've set a test key in this browser's localStorage
+// (matching the TEST_BYPASS_KEY env var in Vercel), attach it so /api/chat
+// skips the rate limiter for you specifically. Nobody else has this key.
+// To enable for yourself: open the browser console on this site and run
+//   localStorage.setItem('lvrge_test_key', 'YOUR_SECRET_HERE')
+function chatHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  const testKey = localStorage.getItem('lvrge_test_key');
+  if (testKey) headers['x-lvrge-test-key'] = testKey;
+  return headers;
+}
+
 // Check pro status on load
 async function checkProStatus() {
   // First check if we have a customerId in localStorage (from successful payment)
@@ -500,7 +512,7 @@ Return this exact JSON:
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: chatHeaders(),
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
 
@@ -604,7 +616,7 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: chatHeaders(),
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
 
