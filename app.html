@@ -248,9 +248,12 @@
       <div class="loading" id="loading"><span class="spinner"></span><span id="loadingMsg">Scanning keywords...</span></div>
       <div class="results" id="results">
         <div class="export-row" id="exportRow" style="display:none;">
+          <button class="export-btn" onclick="exportResultsAsJson()">💾 Save Results</button>
+          <button class="export-btn" onclick="importResultsFromJson()">📂 Load Results</button>
           <button class="export-btn" onclick="exportResultsAsDocx()">📄 Export as DOCX</button>
           <button class="export-btn" onclick="exportResultsAsPdf()">📋 Export as PDF</button>
         </div>
+        <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="handleJsonImport(event)">
         <div class="score-row">
           <div class="metric"><div class="ml">ATS match score</div><div class="mv" id="scoreVal">—</div></div>
           <div class="metric"><div class="ml">Keywords matched</div><div class="mv good" id="matchCount">—</div></div>
@@ -763,6 +766,79 @@ function exportResultsAsPdf() {
     console.error('PDF export error:', e);
     alert('Error exporting to PDF: ' + e.message);
   }
+}
+
+// JSON Import/Export for Resume Optimizer Results
+function exportResultsAsJson() {
+  if (!currentResults) {
+    alert('No results to export. Run an analysis first.');
+    return;
+  }
+
+  try {
+    const dataToExport = {
+      timestamp: new Date().toISOString(),
+      jobDescription: document.getElementById('jdInput').value,
+      resume: document.getElementById('resumeInput').value,
+      results: currentResults
+    };
+
+    const jsonString = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LVRGE-Results-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch(e) {
+    console.error('JSON export error:', e);
+    alert('Error saving results: ' + e.message);
+  }
+}
+
+function importResultsFromJson() {
+  document.getElementById('jsonFileInput').click();
+}
+
+function handleJsonImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      if (!data.results || !data.jobDescription || !data.resume) {
+        alert('Invalid file format. Please use a file exported from LVRGE.');
+        return;
+      }
+
+      // Restore the inputs
+      document.getElementById('jdInput').value = data.jobDescription;
+      document.getElementById('resumeInput').value = data.resume;
+
+      // Restore the results
+      currentResults = data.results;
+      renderResults(currentResults);
+
+      // Show the results section
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('exportRow').style.display = 'flex';
+
+      alert('Results loaded successfully! Scroll down to see the analysis.');
+    } catch(e) {
+      console.error('JSON import error:', e);
+      alert('Error loading results: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+
+  // Reset file input so same file can be selected again
+  event.target.value = '';
 }
 
 async function exportCLAsDocx() {
