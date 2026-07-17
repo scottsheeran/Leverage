@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Paste a job description and your resume — get an ATS match score, missing keywords, and honest rewrites in 30 seconds. Free, no account required.">
 <title>LVRGE — Take back your leverage</title>
 
 <!-- Favicons -->
@@ -178,6 +179,19 @@
   .modal-close { width: 100%; padding: 12px; font-size: 14px; background: transparent; border: 0.5px solid var(--border-md); color: var(--text); border-radius: var(--radius); cursor: pointer; }
   .modal-close:hover { background: var(--bg); }
 
+  .inline-error { display: none; font-size: 13px; color: var(--danger); background: var(--danger-bg); border-radius: var(--radius-sm); padding: 10px 14px; margin: -12px 0 20px; }
+  .inline-error.show { display: block; }
+  .score-projected { font-size: 13px; color: var(--success); font-weight: 600; margin-top: 4px; }
+  .privacy-note { font-size: 11px; color: var(--hint); margin-top: 8px; }
+  .tracker-controls { margin-bottom: 12px; }
+  .tracker-controls input { max-width: 260px; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--text); }
+  .del-btn { font-size: 12px; border: none; background: transparent; color: var(--hint); cursor: pointer; padding: 2px 6px; }
+  .del-btn:hover { color: var(--danger); }
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; }
+  select.status-select { font-size: 13px; padding: 8px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
+
   .pro-locked { opacity: 0.5; pointer-events: none; }
   .pro-badge { display: inline-block; font-size: 10px; background: var(--warning-bg); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 500; }
 
@@ -219,7 +233,7 @@
     <div class="tab-row">
       <button class="tab-btn active" onclick="switchTab('optimizer',this)">Resume Optimizer <span class="free-tag">free</span></button>
       <button class="tab-btn" onclick="switchTab('tracker',this)">Job Tracker</button>
-      <button class="tab-btn" onclick="switchTab('coverletter',this)">Cover Letter <span class="pro-tag">pro</span></button>
+      <button class="tab-btn" onclick="switchTab('coverletter',this)">Cover Letter</button>
     </div>
   </div>
 </div>
@@ -241,10 +255,12 @@
               <input type="file" id="resumeFile" accept=".pdf,.docx,.txt" onchange="handleResumeUpload(event)">
               <div class="file-info" id="fileInfo">Or paste text above</div>
             </div>
+            <div class="privacy-note">Your resume is processed once for this analysis and never stored on our servers.</div>
           </div>
         </div>
       </div>
       <button class="primary-btn" id="analyzeBtn" onclick="analyze()">Analyze and optimize ↗</button>
+      <div class="inline-error" id="optError"></div>
       <div class="loading" id="loading"><span class="spinner"></span><span id="loadingMsg">Scanning keywords...</span></div>
       <div class="results" id="results">
         <div class="export-row" id="exportRow" style="display:none;">
@@ -255,7 +271,7 @@
         </div>
         <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="handleJsonImport(event)">
         <div class="score-row">
-          <div class="metric"><div class="ml">ATS match score</div><div class="mv" id="scoreVal">—</div></div>
+          <div class="metric"><div class="ml">ATS match score</div><div class="mv" id="scoreVal">—</div><div class="score-projected" id="scoreProjected"></div></div>
           <div class="metric"><div class="ml">Keywords matched</div><div class="mv good" id="matchCount">—</div></div>
           <div class="metric"><div class="ml">Keywords missing</div><div class="mv bad" id="missCount">—</div></div>
         </div>
@@ -283,22 +299,33 @@
         <div class="field-label" style="margin-bottom:10px">Add a job</div>
         <div class="add-row">
           <input type="text" id="jobTitle" placeholder="Role — Company (e.g. BDR at Wiz)">
-          <input type="text" id="jobStatus" placeholder="Status">
-          <input type="text" id="jobScore" placeholder="Score">
+          <select class="status-select" id="jobStatus">
+            <option>Saved</option>
+            <option selected>Applied</option>
+            <option>Interviewing</option>
+            <option>Offer</option>
+            <option>Rejected</option>
+          </select>
+          <input type="text" id="jobScore" placeholder="Fit 1–10" inputmode="numeric">
           <button class="add-btn" onclick="addJob()">Add</button>
         </div>
+        <div class="inline-error" id="trackerError" style="margin:10px 0 0"></div>
+      </div>
+      <div class="tracker-controls">
+        <input type="text" id="jobSearch" placeholder="Search roles or companies..." oninput="renderJobs()">
       </div>
       <div class="tracker-table-wrap">
         <table>
-          <thead><tr><th>Role</th><th>Status</th><th>Fit</th><th>Added</th></tr></thead>
-          <tbody id="jobList">
-            <tr><td>Software Engineer — Stripe</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-            <tr><td>Product Manager — Notion</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
-            <tr><td>Data Analyst — Veritas</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-            <tr><td>UX Designer — Figma</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">8/10</span></td><td>Today</td></tr>
-            <tr><td>Backend Engineer — Anthropic</td><td><span class="s-pill">Applied</span></td><td><span class="score-pill h">9/10</span></td><td>Today</td></tr>
-          </tbody>
+          <thead><tr>
+            <th class="sortable" onclick="sortJobs('title')">Role ↕</th>
+            <th class="sortable" onclick="sortJobs('status')">Status ↕</th>
+            <th class="sortable" onclick="sortJobs('score')">Fit ↕</th>
+            <th class="sortable" onclick="sortJobs('added')">Added ↕</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="jobList"></tbody>
         </table>
+        <div class="empty-state" id="trackerEmpty">No applications yet. Add your first job above — it takes one line.</div>
       </div>
     </div>
 
@@ -321,6 +348,7 @@
         </div>
       </div>
       <button class="primary-btn" id="clBtn" onclick="generateCL()">Generate cover letter ↗</button>
+      <div class="inline-error" id="clError"></div>
       <div class="loading" id="clLoading"><span class="spinner"></span>Writing your cover letter...</div>
       <div class="cl-result" id="clResult">
         <div class="export-row" id="clExportRow" style="display:none;">
@@ -489,8 +517,6 @@ function updateUsage() {
 }
 
 function showLimitReached() {
-  const msg = "You've reached your free scan limit for this month.\n\nUpgrade to Pro for 100 scans per month — just $49/month.\n\nYour free scans reset on the first of each month.";
-  alert(msg);
   showUpgradeModal();
 }
 
@@ -505,10 +531,17 @@ function syncUsageFromHeaders(res) {
   }
 }
 
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 6000);
+}
+
 async function analyze() {
   const jd = document.getElementById('jdInput').value.trim();
   const resume = document.getElementById('resumeInput').value.trim();
-  if (!jd || !resume) { alert('Please paste both a job description and your resume.'); return; }
+  if (!jd || !resume) { showError('optError', 'Paste both a job description and your resume to run the analysis.'); return; }
   if (!isPro && usageCount >= 10) { showLimitReached(); return; }
 
   document.getElementById('analyzeBtn').disabled = true;
@@ -517,11 +550,16 @@ async function analyze() {
 
   const prompt = `You are an expert ATS resume optimizer. Analyze the resume against the job description and return ONLY valid JSON with no markdown or explanation.
 
+CRITICAL HONESTY RULES for the rewrites:
+- NEVER add a skill, tool, technology, certification, or experience that does not appear in the original resume. Do not add missing keywords as "(familiar)", "(exposure)", "(learning)", or any similar hedge — if it is not in the resume, it must not appear in the rewrite.
+- You may reword, reorder, quantify, and strengthen what IS there, and use exact keyword phrasing from the job description only where the resume already demonstrates that skill.
+- Gaps belong in gap_flags, never papered over in rewrites.
+
 Job Description: ${jd}
 Resume: ${resume}
 
 Return this exact JSON:
-{"score":<0-100>,"matched_keywords":[<strings>],"missing_keywords":[<strings>],"gap_flags":[<strings>],"rewrites":[{"section":"Summary","rewritten":"<text>"},{"section":"Skills","rewritten":"<text>"},{"section":"Top experience bullets","rewritten":"<text>"}]}`;
+{"score":<0-100>,"projected_score":<0-100 estimated ATS score if the candidate adopts your rewrites, honestly reflecting that missing skills remain missing>,"matched_keywords":[<strings>],"missing_keywords":[<strings>],"gap_flags":[<strings>],"rewrites":[{"section":"Summary","rewritten":"<text>"},{"section":"Skills","rewritten":"<text>"},{"section":"Top experience bullets","rewritten":"<text>"}]}`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -552,7 +590,7 @@ Return this exact JSON:
   } catch(e) {
     stopLoad('loading');
     document.getElementById('analyzeBtn').disabled = false;
-    alert('Something went wrong. Please try again.');
+    showError('optError', 'Something went wrong on our end. Your scan was not counted — please try again.');
   }
 }
 
@@ -561,6 +599,9 @@ function renderResults(d) {
   const sv = document.getElementById('scoreVal');
   sv.textContent = score + '%';
   sv.className = 'mv ' + (score >= 80 ? 'good' : score >= 65 ? 'warn' : 'bad');
+  const proj = document.getElementById('scoreProjected');
+  const projected = Math.round(d.projected_score || 0);
+  proj.textContent = (projected > score) ? '→ ' + projected + '% with rewrites below' : '';
   document.getElementById('matchCount').textContent = d.matched_keywords.length;
   document.getElementById('missCount').textContent = d.missing_keywords.length;
 
@@ -581,7 +622,13 @@ function renderResults(d) {
   d.rewrites.forEach(r => {
     const c = document.createElement('div');
     c.className = 'rw-card';
-    c.innerHTML = `<div class="rw-name">${r.section}</div><div class="rw-text">${r.rewritten}</div><button class="copy-btn" onclick="this.previousElementSibling.previousElementSibling && navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)})">Copy</button>`;
+    const name = document.createElement('div'); name.className = 'rw-name'; name.textContent = r.section;
+    const text = document.createElement('div'); text.className = 'rw-text'; text.textContent = r.rewritten;
+    const btn = document.createElement('button'); btn.className = 'copy-btn'; btn.textContent = 'Copy';
+    btn.onclick = () => navigator.clipboard.writeText(r.rewritten).then(() => {
+      btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+    c.append(name, text, btn);
     rEl.appendChild(c);
   });
 
@@ -594,26 +641,109 @@ function renderResults(d) {
   document.getElementById('analyzeBtn').disabled = false;
 }
 
+// --- Job Tracker: persistent, sortable, searchable ---
+let jobs = [];
+let jobSort = { key: 'added', dir: -1 };
+
+function loadJobs() {
+  try { jobs = JSON.parse(localStorage.getItem('lvrge_jobs') || '[]'); } catch(e) { jobs = []; }
+  renderJobs();
+}
+
+function saveJobs() {
+  localStorage.setItem('lvrge_jobs', JSON.stringify(jobs));
+}
+
 function addJob() {
   const title = document.getElementById('jobTitle').value.trim();
-  const status = document.getElementById('jobStatus').value.trim() || 'New';
-  const score = document.getElementById('jobScore').value.trim();
-  if (!title) return;
-  const tbody = document.getElementById('jobList');
-  const n = parseInt(score);
-  const pc = n >= 8 ? 'h' : n >= 6 ? 'm' : 'l';
-  const row = document.createElement('tr');
-  row.innerHTML = `<td>${title}</td><td><span class="s-pill">${status}</span></td><td><span class="score-pill ${pc}">${score ? score+'/10' : '—'}</span></td><td>Today</td>`;
-  tbody.insertBefore(row, tbody.firstChild);
+  const status = document.getElementById('jobStatus').value;
+  const scoreRaw = document.getElementById('jobScore').value.trim();
+  if (!title) { showError('trackerError', 'Enter a role and company first.'); return; }
+  let score = null;
+  if (scoreRaw) {
+    score = parseInt(scoreRaw, 10);
+    if (isNaN(score) || score < 1 || score > 10) { showError('trackerError', 'Fit score must be a number from 1 to 10.'); return; }
+  }
+  jobs.unshift({ id: Date.now(), title, status, score, added: new Date().toISOString() });
+  saveJobs();
+  renderJobs();
   document.getElementById('jobTitle').value = '';
-  document.getElementById('jobStatus').value = '';
   document.getElementById('jobScore').value = '';
+}
+
+function deleteJob(id) {
+  jobs = jobs.filter(j => j.id !== id);
+  saveJobs();
+  renderJobs();
+}
+
+function setJobStatus(id, status) {
+  const j = jobs.find(j => j.id === id);
+  if (j) { j.status = status; saveJobs(); renderJobs(); }
+}
+
+function sortJobs(key) {
+  jobSort.dir = (jobSort.key === key) ? -jobSort.dir : 1;
+  jobSort.key = key;
+  renderJobs();
+}
+
+function fmtAdded(iso) {
+  const d = new Date(iso);
+  const today = new Date();
+  return d.toDateString() === today.toDateString() ? 'Today'
+    : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+const STATUSES = ['Saved','Applied','Interviewing','Offer','Rejected'];
+
+function renderJobs() {
+  const q = (document.getElementById('jobSearch')?.value || '').toLowerCase();
+  const tbody = document.getElementById('jobList');
+  tbody.innerHTML = '';
+  let list = jobs.filter(j => j.title.toLowerCase().includes(q));
+  const k = jobSort.key, dir = jobSort.dir;
+  list.sort((a, b) => {
+    const va = k === 'score' ? (a.score ?? -1) : (a[k] ?? '');
+    const vb = k === 'score' ? (b.score ?? -1) : (b[k] ?? '');
+    return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
+  });
+  document.getElementById('trackerEmpty').style.display = list.length ? 'none' : 'block';
+  list.forEach(j => {
+    const row = document.createElement('tr');
+
+    const tdTitle = document.createElement('td'); tdTitle.textContent = j.title;
+
+    const tdStatus = document.createElement('td');
+    const sel = document.createElement('select'); sel.className = 'status-select';
+    STATUSES.forEach(s => { const o = document.createElement('option'); o.textContent = s; o.selected = s === j.status; sel.appendChild(o); });
+    sel.onchange = () => setJobStatus(j.id, sel.value);
+    tdStatus.appendChild(sel);
+
+    const tdScore = document.createElement('td');
+    const pill = document.createElement('span');
+    if (j.score != null) {
+      pill.className = 'score-pill ' + (j.score >= 8 ? 'h' : j.score >= 6 ? 'm' : 'l');
+      pill.textContent = j.score + '/10';
+    } else { pill.className = 's-pill'; pill.textContent = '—'; }
+    tdScore.appendChild(pill);
+
+    const tdAdded = document.createElement('td'); tdAdded.textContent = fmtAdded(j.added);
+
+    const tdDel = document.createElement('td');
+    const del = document.createElement('button'); del.className = 'del-btn'; del.textContent = '✕'; del.title = 'Remove';
+    del.onclick = () => deleteJob(j.id);
+    tdDel.appendChild(del);
+
+    row.append(tdTitle, tdStatus, tdScore, tdAdded, tdDel);
+    tbody.appendChild(row);
+  });
 }
 
 async function generateCL() {
   const jd = document.getElementById('clJd').value.trim();
   const resume = document.getElementById('clResume').value.trim();
-  if (!jd || !resume) { alert('Please paste both a job description and your background.'); return; }
+  if (!jd || !resume) { showError('clError', 'Paste both a job description and your background to generate a letter.'); return; }
   if (!isPro && usageCount >= 10) { showLimitReached(); return; }
 
   document.getElementById('clBtn').disabled = true;
@@ -625,7 +755,7 @@ Tone: ${tone}
 Job Description: ${jd}
 Candidate Background: ${resume}
 
-Write a concise, compelling cover letter (3-4 short paragraphs). No generic opener. Start with the strongest hook. End with a clear call to action. Return only the cover letter text.`;
+Write a concise, compelling cover letter (3-4 short paragraphs). No generic opener. Start with the strongest hook. End with a clear call to action. Use only facts, numbers, and experience explicitly stated in the candidate background — never invent details, durations, or accomplishments. It's fine to briefly and confidently acknowledge a gap. Return only the cover letter text.`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -662,7 +792,7 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
   } catch(e) {
     stopLoad('clLoading');
     document.getElementById('clBtn').disabled = false;
-    alert('Something went wrong. Please try again.');
+    showError('clError', 'Something went wrong on our end. Please try again.');
   }
 }
 
@@ -997,6 +1127,7 @@ function handlePaymentReturn() {
 handlePaymentReturn();
 checkProStatus();
 updateUsage();
+loadJobs();
 </script>
 </body>
 </html>
