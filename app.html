@@ -212,7 +212,7 @@
     <div class="header-inner">
       <div><a href="/" class="logo-link"><span class="logo">LVRGE</span></a><span class="logo-sub">take back your leverage</span></div>
       <div id="headerStatus">
-        <button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $49/mo</button>
+        <button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade — from $9</button>
       </div>
     </div>
   </div>
@@ -364,19 +364,30 @@
   </div>
 </main>
 
+<!-- Email Gate Modal -->
+<div class="modal-overlay" id="emailModal">
+  <div class="modal">
+    <h2>Where should we send your results?</h2>
+    <p>Your 10 free scans are on us — we just ask for an email first. Occasional job-search tips, no spam, unsubscribe anytime.</p>
+    <input type="email" id="gateEmail" placeholder="you@example.com" style="width:100%;font-size:14px;padding:11px 12px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);margin-bottom:8px;font-family:inherit;" autocomplete="email">
+    <div class="inline-error" id="gateError" style="margin:0 0 8px"></div>
+    <button class="modal-btn" onclick="submitEmailGate()">Start scanning free →</button>
+  </div>
+</div>
+
 <!-- Pro Upgrade Modal -->
 <div class="modal-overlay" id="upgradeModal">
   <div class="modal">
-    <h2>Upgrade to Pro</h2>
-    <p>Get 100 scans per month for serious job seekers. Upload PDFs, export results, and access all premium features.</p>
+    <h2>Get more scans</h2>
+    <p>100 scans, PDF upload, and DOCX/PDF export — pick the plan that fits where you are in the search.</p>
     <ul class="modal-features">
-      <li>100 scans per month</li>
+      <li>100 scans (per month, or per week pass)</li>
       <li>Upload PDF/DOCX/TXT resumes</li>
       <li>Export results as DOCX & PDF</li>
       <li>Priority API response</li>
-      <li>Early access to new features</li>
     </ul>
-    <button class="modal-btn" onclick="processPurchase()">Upgrade Now — $49/month</button>
+    <button class="modal-btn" onclick="processPurchase('monthly')">Pro — $19/month</button>
+    <button class="modal-btn" style="background:var(--surface);color:var(--text);border:1.5px solid var(--text);" onclick="processPurchase('week')">Week Pass — $9 one-time</button>
     <button class="modal-close" onclick="closeUpgradeModal()">Close</button>
   </div>
 </div>
@@ -461,7 +472,7 @@ function updateHeaderForProStatus() {
     // Show file upload for Pro users
     document.getElementById('fileUploadSection').style.display = 'block';
   } else {
-    headerStatus.innerHTML = '<button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade to Pro — $49/mo</button>';
+    headerStatus.innerHTML = '<button class="upgrade-chip" onclick="showUpgradeModal()">Upgrade — from $9</button>';
     document.getElementById('fileUploadSection').style.display = 'none';
   }
 }
@@ -474,10 +485,21 @@ function closeUpgradeModal() {
   document.getElementById('upgradeModal').classList.remove('active');
 }
 
-function processPurchase() {
-  // Redirect to LemonSqueezy hosted checkout
-  const checkoutUrl = 'https://leverageapp.lemonsqueezy.com/checkout/buy/f4717adc-cc0e-4c93-9cd4-2eee7f358b65';
-  window.location.href = checkoutUrl;
+// Checkout links — single source of truth. Paste LemonSqueezy checkout
+// URLs here once the products exist (same values as index.html).
+const LVRGE_CHECKOUT = {
+  week: "",    // TODO: $9 Week Pass (one-time) checkout URL
+  monthly: ""  // TODO: $19/month Pro subscription checkout URL
+};
+
+function processPurchase(plan) {
+  const url = LVRGE_CHECKOUT[plan || 'monthly'];
+  if (!url) {
+    showError('optError', 'Checkout is being set up — check back shortly.');
+    closeUpgradeModal();
+    return;
+  }
+  window.location.href = url;
 }
 
 function switchTab(id, btn) {
@@ -531,6 +553,43 @@ function syncUsageFromHeaders(res) {
   }
 }
 
+// --- Email gate: free scans require an email (list building) ---
+let pendingGatedAction = null;
+
+function hasGateEmail() {
+  return !!localStorage.getItem('lvrge_email');
+}
+
+function requireEmail(action) {
+  if (hasGateEmail() || isPro) return true;
+  pendingGatedAction = action;
+  document.getElementById('emailModal').classList.add('active');
+  setTimeout(() => document.getElementById('gateEmail').focus(), 50);
+  return false;
+}
+
+function submitEmailGate() {
+  const email = document.getElementById('gateEmail').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const el = document.getElementById('gateError');
+    el.textContent = 'Enter a valid email to continue.';
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 4000);
+    return;
+  }
+  localStorage.setItem('lvrge_email', email);
+  // Subscribe via Kit (same form as homepage); fire-and-forget.
+  try {
+    const fd = new FormData();
+    fd.append('email_address', email);
+    fetch('https://app.kit.com/forms/9435551/subscriptions', { method: 'POST', body: fd, mode: 'no-cors' });
+  } catch(e) {}
+  document.getElementById('emailModal').classList.remove('active');
+  const action = pendingGatedAction;
+  pendingGatedAction = null;
+  if (action) action();
+}
+
 function showError(id, msg) {
   const el = document.getElementById(id);
   el.textContent = msg;
@@ -542,6 +601,7 @@ async function analyze() {
   const jd = document.getElementById('jdInput').value.trim();
   const resume = document.getElementById('resumeInput').value.trim();
   if (!jd || !resume) { showError('optError', 'Paste both a job description and your resume to run the analysis.'); return; }
+  if (!requireEmail(analyze)) return;
   if (!isPro && usageCount >= 10) { showLimitReached(); return; }
 
   document.getElementById('analyzeBtn').disabled = true;
@@ -744,6 +804,7 @@ async function generateCL() {
   const jd = document.getElementById('clJd').value.trim();
   const resume = document.getElementById('clResume').value.trim();
   if (!jd || !resume) { showError('clError', 'Paste both a job description and your background to generate a letter.'); return; }
+  if (!requireEmail(generateCL)) return;
   if (!isPro && usageCount >= 10) { showLimitReached(); return; }
 
   document.getElementById('clBtn').disabled = true;

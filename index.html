@@ -128,7 +128,7 @@
   .step p { font-size: 14px; color: var(--muted); line-height: 1.55; }
 
   /* Pricing */
-  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 800px; margin: 0 auto; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 1000px; margin: 0 auto; }
   .price-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 28px; position: relative; display: flex; flex-direction: column; }
   .price-card.featured { border: 1.5px solid var(--text); }
   .price-badge { position: absolute; top: -10px; right: 20px; background: var(--text); color: #fff; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -429,7 +429,7 @@
 
     <div class="founding-banner">
       <span class="founding-badge">Simple Pricing</span>
-      <span class="founding-text">Free tier to get started. <strong>$49/month Pro</strong> for serious job seekers. No surprises.</span>
+      <span class="founding-text">Free tier to get started. <strong>$9 for a week</strong> when you need it. <strong>$19/month</strong> for the full search. No surprises.</span>
     </div>
 
     <div class="pricing-grid">
@@ -443,16 +443,30 @@
           <li>Unlimited job tracking</li>
           <li>All four cover letter tones</li>
           <li>No credit card required</li>
-          <li>No account required</li>
+          <li>Just an email — no password, no account</li>
         </ul>
         <a href="/app" class="cta-btn cta-btn-outline">Start free</a>
+      </div>
+
+      <div class="price-card">
+        <div class="price-tier">Week Pass</div>
+        <div class="price-amount">$9<span class="per">/one-time</span></div>
+        <div class="price-desc">Application crunch? Everything, for 7 days.</div>
+        <ul class="price-features">
+          <li>All Pro features for 7 days</li>
+          <li>100-scan allowance</li>
+          <li>Upload PDF/DOCX/TXT resumes</li>
+          <li>Export results as DOCX & PDF</li>
+          <li>No subscription — it just ends</li>
+        </ul>
+        <a href="/app" class="cta-btn cta-btn-outline" data-checkout="week">Get the Week Pass</a>
       </div>
 
       <div class="price-card featured">
         <span class="price-badge">Most Popular</span>
         <div class="price-tier">Pro</div>
-        <div class="price-amount">$49<span class="per">/month</span></div>
-        <div class="price-desc">For a focused job search.</div>
+        <div class="price-amount">$19<span class="per">/month</span></div>
+        <div class="price-desc">For the full search, start to offer.</div>
         <ul class="price-features">
           <li>100 scans per month</li>
           <li>Upload PDF/DOCX/TXT resumes</li>
@@ -460,12 +474,23 @@
           <li>Priority API response</li>
           <li>Early access to features</li>
         </ul>
-        <a href="https://leverageapp.lemonsqueezy.com/checkout/buy/f4717adc-cc0e-4c93-9cd4-2eee7f358b65" class="cta-btn">Upgrade to Pro</a>
+        <a href="/app" class="cta-btn" data-checkout="monthly">Upgrade to Pro</a>
         <button class="cta-btn-link" onclick="window.location.href='/app'">Try free first →</button>
       </div>
 
-
     </div>
+    <script>
+      // Checkout links — single source of truth. Paste LemonSqueezy checkout
+      // URLs here once the products exist. Until then, buttons fall back to /app.
+      const LVRGE_CHECKOUT = {
+        week: "",    // TODO: $9 Week Pass (one-time) checkout URL
+        monthly: ""  // TODO: $19/month Pro subscription checkout URL
+      };
+      document.querySelectorAll('[data-checkout]').forEach(a => {
+        const url = LVRGE_CHECKOUT[a.dataset.checkout];
+        if (url) a.href = url;
+      });
+    </script>
   </div>
 </section>
 

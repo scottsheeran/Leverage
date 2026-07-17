@@ -85,26 +85,38 @@ async function handleOrderCreated(data) {
 
   if (!customerId || !email) return;
 
-  // Store Pro subscription in Redis (30 days validity as baseline)
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  // Week Pass ($9 one-time) vs subscription baseline: identified by the
+  // LemonSqueezy variant/product ID set in the LS_WEEKPASS_VARIANT_ID env var.
+  // Week Pass grants full Pro access for 7 days — the Redis TTL is the expiry,
+  // no subscription events will follow for a one-time purchase.
+  const weekPassId = process.env.LS_WEEKPASS_VARIANT_ID;
+  const orderVariantId = String(
+    data.attributes?.first_order_item?.variant_id ??
+    data.attributes?.first_order_item?.product_id ?? ''
+  );
+  const isWeekPass = Boolean(weekPassId) && orderVariantId === String(weekPassId);
+
+  const ttlSeconds = (isWeekPass ? 7 : 30) * 24 * 60 * 60;
+  const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
 
   const subscription = {
     customerId,
     email,
     name,
     expiresAt,
+    tier: isWeekPass ? 'week_pass' : 'pro',
     status: 'active',
     createdAt: new Date().toISOString(),
   };
 
   await redis.set(`lvrge:pro:${customerId}`, JSON.stringify(subscription), {
-    ex: 30 * 24 * 60 * 60, // 30 days
+    ex: ttlSeconds,
   });
   await redis.set(`lvrge:email:${email}`, JSON.stringify(subscription), {
-    ex: 30 * 24 * 60 * 60,
+    ex: ttlSeconds,
   });
 
-  console.log(`Pro subscription activated for ${email}`);
+  console.log(`${isWeekPass ? 'Week Pass' : 'Pro subscription'} activated for ${email}, expires ${expiresAt}`);
 }
 
 async function handleSubscriptionCreated(data) {
