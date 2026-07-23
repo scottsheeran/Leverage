@@ -1184,8 +1184,24 @@ function handlePaymentReturn() {
   }
 }
 
+// Owner re-arm via URL: visiting /app?owner=YOUR_KEY stores the test key in
+// this browser, then strips the param from the URL/history so it doesn't
+// linger. Bookmark that URL to restore the toggle on any device after a
+// storage wipe. The key is validated server-side on every scan anyway; this
+// only controls whether the owner UI shows.
+function handleOwnerRearm() {
+  const params = new URLSearchParams(window.location.search);
+  const owner = params.get('owner');
+  if (owner && owner.length >= 8) {
+    localStorage.setItem('lvrge_test_key', owner);
+    params.delete('owner');
+    const qs = params.toString();
+    window.history.replaceState({}, document.title, window.location.pathname + (qs ? '?' + qs : ''));
+  }
+}
+
 // Owner test toggle: only rendered when this browser has the secret test key
-// in localStorage (set once via console: localStorage.setItem('lvrge_test_key', KEY)).
+// in localStorage (set once via console, or via /app?owner=KEY).
 // Regular visitors never see it. Flips the client-side Pro flag to preview
 // paid features; backend limits are already bypassed by the key itself.
 function initOwnerTestToggle() {
@@ -1204,6 +1220,7 @@ function initOwnerTestToggle() {
 }
 
 // Initialize
+handleOwnerRearm();
 handlePaymentReturn();
 checkProStatus();
 updateUsage();
