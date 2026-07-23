@@ -1048,23 +1048,66 @@ function resumeTokensToHtml(tokens) {
   return html;
 }
 
+// Draw the PDF directly with jsPDF text (deterministic — no html2canvas
+// screenshot step, which was rendering blank pages). jsPDF ships inside the
+// html2pdf bundle as window.jspdf.jsPDF.
 function exportResumeAsPdf() {
   const text = document.getElementById('optimizedResume').value.trim();
   if (!text) { showError('optError', 'Nothing to export yet — build your resume first.'); return; }
   try {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'font-family:Arial,Helvetica,sans-serif;color:#000;width:720px;padding:28px 32px;position:absolute;left:-9999px;top:0;background:#fff;';
-    wrap.innerHTML = resumeTokensToHtml(parseResumeTokens(text));
-    document.body.appendChild(wrap); // must be in the DOM or html2canvas renders blank
-    const opt = {
-      margin: 12,
-      filename: `LVRGE-Optimized-Resume-${new Date().toISOString().split('T')[0]}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-    };
-    html2pdf().set(opt).from(wrap).save().then(() => wrap.remove()).catch(() => wrap.remove());
+    const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!jsPDFCtor) { return exportResumeAsPdfFallback(text); }
+    const doc = new jsPDFCtor({ unit: 'pt', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 44, maxW = pageW - margin * 2;
+    let y = margin;
+    const ensure = (h) => { if (y + h > pageH - margin) { doc.addPage(); y = margin; } };
+    parseResumeTokens(text).forEach(tok => {
+      if (tok.type === 'name') {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(20);
+        ensure(22); doc.text(tok.text, pageW / 2, y, { align: 'center' }); y += 20;
+      } else if (tok.type === 'contact') {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(80);
+        ensure(14); doc.text(tok.text, pageW / 2, y, { align: 'center' }); y += 16;
+      } else if (tok.type === 'header') {
+        y += 8; doc.setFont('helvetica', 'bold'); doc.setFontSize(11.5); doc.setTextColor(20);
+        ensure(16); doc.text(tok.text.toUpperCase(), margin, y); y += 4;
+        doc.setDrawColor(150); doc.setLineWidth(0.6); doc.line(margin, y, pageW - margin, y); y += 10;
+      } else if (tok.type === 'jobtitle') {
+        y += 4; doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(20);
+        const l = doc.splitTextToSize(tok.text, maxW); ensure(l.length * 13); doc.text(l, margin, y); y += l.length * 13;
+      } else if (tok.type === 'date') {
+        doc.setFont('helvetica', 'italic'); doc.setFontSize(9.5); doc.setTextColor(90);
+        ensure(13); doc.text(tok.text, margin, y); y += 13;
+      } else if (tok.type === 'bullet') {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(30);
+        const ind = 12; const l = doc.splitTextToSize(tok.text, maxW - ind); ensure(l.length * 12.5);
+        doc.text('•', margin, y); doc.text(l, margin + ind, y); y += l.length * 12.5 + 1;
+      } else {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(30);
+        const l = doc.splitTextToSize(tok.text, maxW); ensure(l.length * 12.5); doc.text(l, margin, y); y += l.length * 12.5 + 2;
+      }
+    });
+    doc.save(`LVRGE-Optimized-Resume-${new Date().toISOString().split('T')[0]}.pdf`);
   } catch(e) { showError('optError', 'Error exporting to PDF: ' + e.message); }
+}
+
+// Fallback only if jsPDF isn't exposed: render styled HTML (appended to the
+// DOM so html2canvas can see it) and print via html2pdf.
+function exportResumeAsPdfFallback(text) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'font-family:Arial,Helvetica,sans-serif;color:#000;width:720px;padding:28px 32px;position:absolute;left:0;top:0;background:#fff;z-index:-1;';
+  wrap.innerHTML = resumeTokensToHtml(parseResumeTokens(text));
+  document.body.appendChild(wrap);
+  const opt = {
+    margin: 12,
+    filename: `LVRGE-Optimized-Resume-${new Date().toISOString().split('T')[0]}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+  html2pdf().set(opt).from(wrap).save().then(() => wrap.remove()).catch(() => wrap.remove());
 }
 
 function copyEl(id, btn) {
