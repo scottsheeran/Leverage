@@ -906,8 +906,14 @@ async function buildOptimizedResume() {
 
 CRITICAL HONESTY RULES:
 - Use ONLY facts, skills, employers, dates, and accomplishments present in the original resume. Never invent or add anything not already there.
-- Integrate the improved sections where they belong, keep everything else from the original (contact info, education, full work history), and keep formatting clean and ATS-friendly (plain text, clear section headers, standard bullet points).
-- Do not add commentary, notes, or markdown code fences. Return ONLY the finished resume text.
+- Integrate the improved sections where they belong, and keep everything else from the original (contact info, education, full work history).
+
+STRICT OUTPUT FORMAT (follow exactly so it exports cleanly):
+- Line 1: the candidate's full name only.
+- Line 2: contact details on ONE line separated by "  |  " (for example: City, ST  |  phone  |  email  |  linkedin URL).
+- Section headings in ALL CAPS on their own line (e.g. SUMMARY, CORE COMPETENCIES, EXPERIENCE, EDUCATION).
+- For each job: one line "Job Title | Company", then the next line the date range (e.g. "March 2024 – Present"), then bullet lines each starting with "• ".
+- Use "• " for every bullet. No markdown, no **bold**, no #headers, no code fences, no commentary.
 
 ORIGINAL RESUME:
 ${original}
@@ -915,7 +921,7 @@ ${original}
 IMPROVED SECTIONS TO APPLY:
 ${rewrites}
 
-Return only the complete optimized resume as plain text.`;
+Return only the complete optimized resume as plain text in the exact format above.`;
 
   try {
     const res = await fetch('/api/chat', {
@@ -953,13 +959,64 @@ function clearResumeDraft() {
   document.getElementById('builderIntro').style.display = 'block';
 }
 
+// Parse the optimized-resume text into typed tokens so both exporters can
+// apply consistent professional formatting (name, contact, section headers,
+// job titles, dates, bullets). Tolerant of minor deviations.
+function parseResumeTokens(text) {
+  const lines = text.replace(/\r/g, '').split('\n');
+  const tokens = [];
+  let seenNonEmpty = 0;
+  let section = '';
+  const isHeader = (t) => t.length <= 45 && /[A-Z]/.test(t) && !/[a-z]/.test(t) && !/^[•\-*]/.test(t) && !t.includes('|');
+  const looksLikeDate = (t) => t.length <= 38 && /(19|20)\d{2}/.test(t) && /(present|current|–|—|-|to|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4})/i.test(t);
+  lines.forEach((line) => {
+    const t = line.trim();
+    if (!t) { return; }
+    seenNonEmpty++;
+    if (seenNonEmpty === 1) { tokens.push({ type: 'name', text: t }); return; }
+    if (seenNonEmpty === 2 && (t.includes('|') || t.includes('@') || /\d{3}[-.\s]?\d{3}/.test(t))) {
+      tokens.push({ type: 'contact', text: t }); return;
+    }
+    if (isHeader(t)) { section = t.toUpperCase(); tokens.push({ type: 'header', text: t }); return; }
+    if (/^[•\-*]\s+/.test(t)) { tokens.push({ type: 'bullet', text: t.replace(/^[•\-*]\s+/, '') }); return; }
+    const inExp = /EXPERIENCE|EMPLOYMENT|WORK|HISTORY/.test(section);
+    if (inExp && t.includes('|')) { tokens.push({ type: 'jobtitle', text: t }); return; }
+    if (inExp && looksLikeDate(t)) { tokens.push({ type: 'date', text: t }); return; }
+    tokens.push({ type: 'para', text: t });
+  });
+  return tokens;
+}
+
 async function exportResumeAsDocx() {
   const text = document.getElementById('optimizedResume').value.trim();
   if (!text) { showError('optError', 'Nothing to export yet — build your resume first.'); return; }
   try {
-    const { Document, Packer, Paragraph } = window.docx || docx;
-    const children = text.split('\n').map(line => new Paragraph({ text: line }));
-    const doc = new Document({ sections: [{ children }] });
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = window.docx || docx;
+    const tokens = parseResumeTokens(text);
+    const children = tokens.map(tok => {
+      switch (tok.type) {
+        case 'name':
+          return new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [new TextRun({ text: tok.text, bold: true, size: 34 })] });
+        case 'contact':
+          return new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 220 }, children: [new TextRun({ text: tok.text, size: 18, color: '444444' })] });
+        case 'header':
+          return new Paragraph({ spacing: { before: 240, after: 80 }, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: '999999', space: 2 } }, children: [new TextRun({ text: tok.text.toUpperCase(), bold: true, size: 24 })] });
+        case 'jobtitle':
+          return new Paragraph({ spacing: { before: 140, after: 20 }, children: [new TextRun({ text: tok.text, bold: true, size: 22 })] });
+        case 'date':
+          return new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: tok.text, italics: true, size: 19, color: '555555' })] });
+        case 'bullet':
+          return new Paragraph({ bullet: { level: 0 }, spacing: { after: 40 }, children: [new TextRun({ text: tok.text, size: 20 })] });
+        default:
+          return new Paragraph({ spacing: { after: 60 }, children: [new TextRun({ text: tok.text, size: 20 })] });
+      }
+    });
+    const doc = new Document({
+      sections: [{
+        properties: { page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } } },
+        children
+      }]
+    });
     const blob = await Packer.toBlob(doc);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -969,13 +1026,36 @@ async function exportResumeAsDocx() {
   } catch(e) { showError('optError', 'Error exporting to DOCX: ' + e.message); }
 }
 
+function resumeTokensToHtml(tokens) {
+  let html = '';
+  let inList = false;
+  const openList = () => { if (!inList) { html += '<ul style="margin:2px 0 6px 18px;padding:0;">'; inList = true; } };
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+  const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  tokens.forEach(tok => {
+    if (tok.type !== 'bullet') closeList();
+    switch (tok.type) {
+      case 'name': html += `<div style="text-align:center;font-size:19px;font-weight:700;">${esc(tok.text)}</div>`; break;
+      case 'contact': html += `<div style="text-align:center;font-size:10.5px;color:#444;margin-bottom:10px;">${esc(tok.text)}</div>`; break;
+      case 'header': html += `<div style="font-size:12.5px;font-weight:700;text-transform:uppercase;border-bottom:1px solid #999;margin:13px 0 6px;padding-bottom:2px;letter-spacing:.03em;">${esc(tok.text)}</div>`; break;
+      case 'jobtitle': html += `<div style="font-weight:700;font-size:12px;margin-top:8px;">${esc(tok.text)}</div>`; break;
+      case 'date': html += `<div style="font-style:italic;color:#555;font-size:10.5px;margin-bottom:3px;">${esc(tok.text)}</div>`; break;
+      case 'bullet': openList(); html += `<li style="font-size:11px;margin-bottom:3px;line-height:1.4;">${esc(tok.text)}</li>`; break;
+      default: html += `<div style="font-size:11px;margin-bottom:4px;line-height:1.45;">${esc(tok.text)}</div>`;
+    }
+  });
+  closeList();
+  return html;
+}
+
 function exportResumeAsPdf() {
   const text = document.getElementById('optimizedResume').value.trim();
   if (!text) { showError('optError', 'Nothing to export yet — build your resume first.'); return; }
   try {
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'font-family:Arial,sans-serif;font-size:12px;line-height:1.5;white-space:pre-wrap;padding:8px;color:#000;';
-    wrap.textContent = text;
+    wrap.style.cssText = 'font-family:Arial,Helvetica,sans-serif;color:#000;width:720px;padding:28px 32px;position:absolute;left:-9999px;top:0;background:#fff;';
+    wrap.innerHTML = resumeTokensToHtml(parseResumeTokens(text));
+    document.body.appendChild(wrap); // must be in the DOM or html2canvas renders blank
     const opt = {
       margin: 12,
       filename: `LVRGE-Optimized-Resume-${new Date().toISOString().split('T')[0]}.pdf`,
@@ -983,7 +1063,7 @@ function exportResumeAsPdf() {
       html2canvas: { scale: 2 },
       jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
     };
-    html2pdf().set(opt).from(wrap).save();
+    html2pdf().set(opt).from(wrap).save().then(() => wrap.remove()).catch(() => wrap.remove());
   } catch(e) { showError('optError', 'Error exporting to PDF: ' + e.message); }
 }
 
