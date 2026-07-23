@@ -183,6 +183,7 @@
   .inline-error.show { display: block; }
   .score-projected { font-size: 13px; color: var(--success); font-weight: 600; margin-top: 4px; }
   .privacy-note { font-size: 11px; color: var(--hint); margin-top: 8px; }
+  .builder-hint { font-size: 11px; color: var(--hint); margin-top: 8px; }
   .tracker-controls { margin-bottom: 12px; }
   .tracker-controls input { max-width: 260px; }
   th.sortable { cursor: pointer; user-select: none; }
@@ -290,6 +291,25 @@
         <div class="result-section">
           <div class="result-label">Rewritten sections</div>
           <div id="rewriteCards"></div>
+        </div>
+
+        <div class="result-section" id="builderSection" style="display:none;">
+          <div class="result-label">Build your optimized resume <span class="pro-badge">pro</span></div>
+          <div class="builder-intro" id="builderIntro">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Apply the rewrites above into a complete, ready-to-send resume — then edit or add anything before you export.</p>
+            <button class="primary-btn" id="buildResumeBtn" style="margin-bottom:0;" onclick="buildOptimizedResume()">✨ Build my optimized resume</button>
+          </div>
+          <div class="loading" id="builderLoading"><span class="spinner"></span>Applying your rewrites...</div>
+          <div id="builderPanel" style="display:none;">
+            <textarea id="optimizedResume" style="min-height:340px;" placeholder="Your optimized resume will appear here..." oninput="saveResumeDraft()"></textarea>
+            <div class="builder-hint" id="builderHint">Edited here? Your changes are saved on this device automatically.</div>
+            <div class="export-row" style="margin-top:12px;">
+              <button class="export-btn" onclick="copyEl('optimizedResume',this)">📋 Copy</button>
+              <button class="export-btn" onclick="exportResumeAsDocx()">📄 Export as DOCX</button>
+              <button class="export-btn" onclick="exportResumeAsPdf()">📋 Export as PDF</button>
+              <button class="export-btn" onclick="clearResumeDraft()">🗑️ Clear</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -692,9 +712,22 @@ function renderResults(d) {
     rEl.appendChild(c);
   });
 
-  // Show export buttons only for Pro users
+  // Show export buttons + resume builder only for Pro users
   if (isPro) {
     document.getElementById('exportRow').style.display = 'flex';
+    document.getElementById('builderSection').style.display = 'block';
+    // Restore any draft the user was editing; otherwise reset to the build prompt
+    const draft = localStorage.getItem('lvrge_optimized_resume');
+    if (draft) {
+      document.getElementById('optimizedResume').value = draft;
+      document.getElementById('builderIntro').style.display = 'none';
+      document.getElementById('builderPanel').style.display = 'block';
+    } else {
+      document.getElementById('builderIntro').style.display = 'block';
+      document.getElementById('builderPanel').style.display = 'none';
+    }
+  } else {
+    document.getElementById('builderSection').style.display = 'none';
   }
 
   document.getElementById('results').style.display = 'block';
@@ -857,10 +890,110 @@ Write a concise, compelling cover letter (3-4 short paragraphs). No generic open
   }
 }
 
+// --- Pro: build a full optimized resume by applying the rewrites ---
+async function buildOptimizedResume() {
+  if (!isPro) { showLimitReached(); return; }
+  if (!currentResults || !currentResults.rewrites) { showError('optError', 'Run an analysis first.'); return; }
+  const original = document.getElementById('resumeInput').value.trim();
+  const jd = document.getElementById('jdInput').value.trim();
+  if (!original) { showError('optError', 'Your original resume is needed to build the optimized version.'); return; }
+
+  document.getElementById('builderIntro').style.display = 'none';
+  document.getElementById('builderLoading').style.display = 'block';
+
+  const rewrites = currentResults.rewrites.map(r => `## ${r.section}\n${r.rewritten}`).join('\n\n');
+  const prompt = `You are an expert resume writer. Produce a complete, ready-to-send optimized resume by applying the improved sections below into the candidate's original resume.
+
+CRITICAL HONESTY RULES:
+- Use ONLY facts, skills, employers, dates, and accomplishments present in the original resume. Never invent or add anything not already there.
+- Integrate the improved sections where they belong, keep everything else from the original (contact info, education, full work history), and keep formatting clean and ATS-friendly (plain text, clear section headers, standard bullet points).
+- Do not add commentary, notes, or markdown code fences. Return ONLY the finished resume text.
+
+ORIGINAL RESUME:
+${original}
+
+IMPROVED SECTIONS TO APPLY:
+${rewrites}
+
+Return only the complete optimized resume as plain text.`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: chatHeaders(),
+      body: JSON.stringify(withProIdentity({ model: 'claude-sonnet-5', max_tokens: 4096, thinking: { type: 'disabled' }, messages: [{ role: 'user', content: prompt }] }))
+    });
+    syncUsageFromHeaders(res);
+    if (res.status === 429) { document.getElementById('builderLoading').style.display = 'none'; document.getElementById('builderIntro').style.display = 'block'; showLimitReached(); return; }
+    if (!res.ok) throw new Error('status ' + res.status);
+    const data = await res.json();
+    const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    document.getElementById('builderLoading').style.display = 'none';
+    const ta = document.getElementById('optimizedResume');
+    ta.value = text;
+    saveResumeDraft();
+    document.getElementById('builderPanel').style.display = 'block';
+  } catch(e) {
+    document.getElementById('builderLoading').style.display = 'none';
+    document.getElementById('builderIntro').style.display = 'block';
+    showError('optError', 'Could not build the resume just now. Please try again.');
+  }
+}
+
+function saveResumeDraft() {
+  const v = document.getElementById('optimizedResume').value;
+  if (v.trim()) localStorage.setItem('lvrge_optimized_resume', v);
+  else localStorage.removeItem('lvrge_optimized_resume');
+}
+
+function clearResumeDraft() {
+  localStorage.removeItem('lvrge_optimized_resume');
+  document.getElementById('optimizedResume').value = '';
+  document.getElementById('builderPanel').style.display = 'none';
+  document.getElementById('builderIntro').style.display = 'block';
+}
+
+async function exportResumeAsDocx() {
+  const text = document.getElementById('optimizedResume').value.trim();
+  if (!text) { showError('optError', 'Nothing to export yet — build your resume first.'); return; }
+  try {
+    const { Document, Packer, Paragraph } = window.docx || docx;
+    const children = text.split('\n').map(line => new Paragraph({ text: line }));
+    const doc = new Document({ sections: [{ children }] });
+    const blob = await Packer.toBlob(doc);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LVRGE-Optimized-Resume-${new Date().toISOString().split('T')[0]}.docx`;
+    document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); document.body.removeChild(a);
+  } catch(e) { showError('optError', 'Error exporting to DOCX: ' + e.message); }
+}
+
+function exportResumeAsPdf() {
+  const text = document.getElementById('optimizedResume').value.trim();
+  if (!text) { showError('optError', 'Nothing to export yet — build your resume first.'); return; }
+  try {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'font-family:Arial,sans-serif;font-size:12px;line-height:1.5;white-space:pre-wrap;padding:8px;color:#000;';
+    wrap.textContent = text;
+    const opt = {
+      margin: 12,
+      filename: `LVRGE-Optimized-Resume-${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    html2pdf().set(opt).from(wrap).save();
+  } catch(e) { showError('optError', 'Error exporting to PDF: ' + e.message); }
+}
+
 function copyEl(id, btn) {
-  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+  const el = document.getElementById(id);
+  const text = el.tagName === 'TEXTAREA' ? el.value : el.textContent;
+  const original = btn.textContent;
+  navigator.clipboard.writeText(text).then(() => {
     btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy', 2000);
+    setTimeout(() => btn.textContent = original, 2000);
   });
 }
 
