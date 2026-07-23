@@ -222,6 +222,21 @@
     .nav-links .nav-link { display: none; }
     .footer-inner { flex-direction: column; text-align: center; }
   }
+
+  .lvrge-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.52);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+  .lvrge-overlay.active{opacity:1;pointer-events:all;}
+  .lvrge-modal{background:var(--surface);border-radius:var(--radius-lg);padding:40px 36px;max-width:420px;width:calc(100% - 40px);text-align:center;box-shadow:0 24px 60px -8px rgba(0,0,0,0.22);transform:translateY(18px);transition:transform 0.22s;}
+  .lvrge-overlay.active .lvrge-modal{transform:translateY(0);}
+  .lvrge-modal-mark{display:inline-block;font-size:13px;font-weight:700;letter-spacing:2px;border:1.5px solid var(--text);padding:3px 10px;margin-bottom:22px;}
+  .lvrge-modal h2{font-size:22px;font-weight:600;letter-spacing:-0.3px;line-height:1.2;margin-bottom:10px;}
+  .lvrge-modal p{font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:22px;}
+  .lvrge-modal-input{width:100%;font-size:14px;padding:12px 14px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);font-family:inherit;color:var(--text);background:var(--bg);box-sizing:border-box;}
+  .lvrge-modal-input:focus{outline:none;border-color:var(--text);}
+  .lvrge-modal-error{color:#b91c1c;font-size:12px;min-height:16px;margin:4px 0 6px;text-align:left;}
+  .lvrge-modal-btn{width:100%;font-size:14px;padding:12px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px;transition:opacity 0.15s;}
+  .lvrge-modal-btn:hover{opacity:0.85;}
+  .lvrge-modal-skip{background:transparent;color:var(--muted);font-size:12px;padding:10px;margin-top:4px;border:none;cursor:pointer;font-family:inherit;display:block;width:100%;transition:color 0.15s;}
+  .lvrge-modal-skip:hover{color:var(--text);}
 </style>
 </head>
 <body>
@@ -584,5 +599,67 @@
   });
 </script>
 
+<div class="lvrge-overlay" id="lvrgeOverlay">
+  <div class="lvrge-modal">
+    <div class="lvrge-modal-mark">LVRGE</div>
+    <h2>Get your 10 free scans</h2>
+    <p>Drop your email to unlock free access. Occasional job-search tips, no spam, unsubscribe anytime.</p>
+    <input type="hidden" id="lvrgeModalDest" value="/app">
+    <input type="email" id="lvrgeModalEmail" class="lvrge-modal-input" placeholder="you@example.com" autocomplete="email">
+    <div class="lvrge-modal-error" id="lvrgeModalError"></div>
+    <button class="lvrge-modal-btn" id="lvrgeModalBtn" onclick="lvrgeSubmit()">Get 10 free scans &#x2192;</button>
+    <button class="lvrge-modal-skip" onclick="lvrgeSkip()">Skip for now</button>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY='lvrge_email';
+  function captured(){return!!localStorage.getItem(KEY);}
+  function openModal(dest){
+    document.getElementById('lvrgeModalDest').value=dest||'/app';
+    document.getElementById('lvrgeModalEmail').value='';
+    document.getElementById('lvrgeModalError').textContent='';
+    var btn=document.getElementById('lvrgeModalBtn');
+    btn.textContent='Get 10 free scans \u2192';btn.disabled=false;
+    document.getElementById('lvrgeOverlay').classList.add('active');
+    setTimeout(function(){document.getElementById('lvrgeModalEmail').focus();},60);
+  }
+  window.lvrgeSkip=function(){
+    document.getElementById('lvrgeOverlay').classList.remove('active');
+    window.location.href=document.getElementById('lvrgeModalDest').value||'/app';
+  };
+  window.lvrgeSubmit=function(){
+    var email=document.getElementById('lvrgeModalEmail').value.trim();
+    var errEl=document.getElementById('lvrgeModalError');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Enter a valid email to continue.';return;}
+    errEl.textContent='';
+    var btn=document.getElementById('lvrgeModalBtn');
+    btn.textContent='Unlocking...';btn.disabled=true;
+    localStorage.setItem(KEY,email);
+    var fd=new FormData();fd.append('email_address',email);
+    fetch('https://app.kit.com/forms/9435551/subscriptions',{method:'POST',body:fd,mode:'no-cors'}).catch(function(){});
+    var dest=document.getElementById('lvrgeModalDest').value||'/app';
+    setTimeout(function(){window.location.href=dest;},400);
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    document.getElementById('lvrgeOverlay').addEventListener('click',function(e){if(e.target===this)lvrgeSkip();});
+    document.getElementById('lvrgeModalEmail').addEventListener('keydown',function(e){if(e.key==='Enter')lvrgeSubmit();});
+    document.querySelectorAll('a[href="/app"]').forEach(function(a){
+      a.addEventListener('click',function(e){
+        if(captured())return;
+        e.preventDefault();
+        openModal('/app');
+      });
+    });
+    document.querySelectorAll('.cta-btn-link').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        if(captured()){window.location.href='/app';return;}
+        e.preventDefault();e.stopImmediatePropagation();
+        openModal('/app');
+      },true);
+    });
+  });
+})();
+<\/script>
 </body>
 </html>
