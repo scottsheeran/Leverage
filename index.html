@@ -608,7 +608,7 @@
     <input type="email" id="lvrgeModalEmail" class="lvrge-modal-input" placeholder="you@example.com" autocomplete="email">
     <div class="lvrge-modal-error" id="lvrgeModalError"></div>
     <button class="lvrge-modal-btn" id="lvrgeModalBtn" onclick="lvrgeSubmit()">Get 10 free scans &#x2192;</button>
-    <button class="lvrge-modal-skip" onclick="lvrgeSkip()">Skip for now</button>
+    
   </div>
 </div>
 <script>
@@ -624,10 +624,7 @@
     document.getElementById('lvrgeOverlay').classList.add('active');
     setTimeout(function(){document.getElementById('lvrgeModalEmail').focus();},60);
   }
-  window.lvrgeSkip=function(){
-    document.getElementById('lvrgeOverlay').classList.remove('active');
-    window.location.href=document.getElementById('lvrgeModalDest').value||'/app';
-  };
+  window.lvrgeSkip=function(){/* email required - skip disabled */};
   window.lvrgeSubmit=function(){
     var email=document.getElementById('lvrgeModalEmail').value.trim();
     var errEl=document.getElementById('lvrgeModalError');
@@ -642,7 +639,7 @@
     setTimeout(function(){window.location.href=dest;},400);
   };
   document.addEventListener('DOMContentLoaded',function(){
-    document.getElementById('lvrgeOverlay').addEventListener('click',function(e){if(e.target===this)lvrgeSkip();});
+    // backdrop click disabled - email required
     document.getElementById('lvrgeModalEmail').addEventListener('keydown',function(e){if(e.key==='Enter')lvrgeSubmit();});
     document.querySelectorAll('a[href="/app"]').forEach(function(a){
       a.addEventListener('click',function(e){
